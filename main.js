@@ -439,5 +439,5 @@ function draw() {
 	Sbls.draw();
 	textSize(12);
 	fill(255);
-	text(str(str(s) +" " +str("")), 400, 400);
+	text(str(str(mouseButton) +" " +str("")), 400, 400);
 }
