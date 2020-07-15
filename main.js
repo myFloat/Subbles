@@ -173,8 +173,8 @@ var Sbls = {
 	//Menu
 	alternatives: [], 
 
-	createSubble(X, Y, R, NAME, PARENTS) {
-		this.instances.push(new this.Subble(X, Y, R, NAME, PARENTS));
+	createSubble(X, Y, R, NAME, PARENTS, GENERATION) {
+		this.instances.push(new this.Subble(X, Y, R, NAME, PARENTS, GENERATION));
 		return this.instances[this.instances.length -1];
 	}, 
 	removeSubble(INSTANCE) {
