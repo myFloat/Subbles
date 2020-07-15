@@ -148,8 +148,8 @@ class Subble {
 			CHILD.changeAncestor(CHILD.parents[0].ancestor);
 			//CHILD.generation(CHILD.ancestor).generation +1;
 		} else {
+			CHILD.generation = CHILD.ancestor.generation;
 			CHILD.changeAncestor(CHILD);
-			CHILD.generation--;
 		}
 	}
 	changeAncestor(ANCESTOR) {
