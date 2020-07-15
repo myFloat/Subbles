@@ -82,12 +82,12 @@ function setup() {
 	//Subbles
 	Sbls.render();
 	
-	s = 0;
+	s = "noll";
 }
 
 
 class Subble {
-	constructor(X, Y, R, NAME, PARENTS) {
+	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
@@ -103,6 +103,9 @@ class Subble {
 		this.generation = 0;
 		this.children = [];
 		this.parents = [];
+		if (GENERATION !== undefined) {
+		    this.generation = GENERATION;
+		    }
 		if (PARENTS === [null]) {
 			this.parents = [];
 		} else {
@@ -128,6 +131,9 @@ class Subble {
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
+			if (CHILD.generation <= this.generation || CHILD.parents.length < 1) {
+			    CHILD.generation = this.generation +1;
+			}
 			CHILD.parents.push(this);
 			this.children.push(CHILD);
 			CHILD.changeAncestor(this.ancestor);
@@ -140,7 +146,9 @@ class Subble {
 		this.children.splice(this.children.indexOf(CHILD), 1);
 		if (CHILD.parents.length > 0) {
 			CHILD.changeAncestor(CHILD.parents[0].ancestor);
+			//CHILD.generation(CHILD.ancestor).generation +1;
 		} else {
+			CHILD.generation = CHILD.ancestor.generation;
 			CHILD.changeAncestor(CHILD);
 		}
 	}
@@ -170,8 +178,8 @@ var Sbls = {
 	//Menu
 	alternatives: [], 
 
-	createSubble(X, Y, R, NAME, PARENTS) {
-		this.instances.push(new this.Subble(X, Y, R, NAME, PARENTS));
+	createSubble(X, Y, R, NAME, PARENTS, GENERATION) {
+		this.instances.push(new this.Subble(X, Y, R, NAME, PARENTS, GENERATION));
 		return this.instances[this.instances.length -1];
 	}, 
 	removeSubble(INSTANCE) {
@@ -331,6 +339,7 @@ var Sbls = {
 	menuShift(OBJ) {
 		let forMenu = null;
 		if (this.menu === null) {
+			s = OBJ.generation;
 			forMenu = OBJ;
 			this.alternatives = [];
 			const optionRadius = height /24;
@@ -341,7 +350,7 @@ var Sbls = {
 			//To add subble
 			const alt1 = function() {
 				const vec = DrawZ.invertScaled(mouseX, mouseY);
-				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu]);
+				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
 				Sbls.render();
 				Sbls.editName(subble);
 				Sbls.menuShift(forMenu); //Last edit
@@ -447,5 +456,5 @@ function draw() {
 	Sbls.draw();
 	textSize(12);
 	fill(255);
-	text(str(str(s) +" " +str("")), 400, 400);
+	text(str("gen:") +" " +str(str(s)), 400, 400);
 }
