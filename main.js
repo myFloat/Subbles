@@ -456,5 +456,5 @@ function draw() {
 	Sbls.draw();
 	textSize(12);
 	fill(255);
-	text(str(str(s) +" " +str("gen")), 400, 400);
+	text(+str("gen:") +" " str(str(s)), 400, 400);
 }
