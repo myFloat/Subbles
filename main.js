@@ -131,6 +131,9 @@ class Subble {
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
+			if (CHILD.generation <= this.generation || CHILD.parents.length > 0) {
+			    CHILD.generation = this.generation +1;
+			}
 			CHILD.parents.push(this);
 			this.children.push(CHILD);
 			CHILD.changeAncestor(this.ancestor);
@@ -143,8 +146,10 @@ class Subble {
 		this.children.splice(this.children.indexOf(CHILD), 1);
 		if (CHILD.parents.length > 0) {
 			CHILD.changeAncestor(CHILD.parents[0].ancestor);
+			//CHILD.generation(CHILD.ancestor).generation +1;
 		} else {
 			CHILD.changeAncestor(CHILD);
+			CHILD.generation--;
 		}
 	}
 	changeAncestor(ANCESTOR) {
