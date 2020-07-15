@@ -100,6 +100,7 @@ class Subble {
 		this.color = color(127, 127, 255, 255);
 		this.name = NAME;
 		this.selected = false;
+		this.generation = 0;
 		this.children = [];
 		this.parents = [];
 		if (PARENTS === [null]) {
@@ -336,6 +337,8 @@ var Sbls = {
 			const circleRadius = height /6;
 			const increment = PI *2/3;	//Change this when adding alt-functions
 			let theta = PI /2;
+			
+			//To add subble
 			const alt1 = function() {
 				const vec = DrawZ.invertScaled(mouseX, mouseY);
 				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu]);
@@ -350,6 +353,8 @@ var Sbls = {
 			}
 			theta += increment;
 			this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
+			
+			//To edit name
 			const alt2 = function() {
 				Sbls.editName(forMenu);
 				Sbls.menuShift(forMenu);
@@ -361,6 +366,8 @@ var Sbls = {
 			}
 			theta += increment;
 			this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
+			
+			//To remove bubble
 			const alt3 = function() {
 				Sbls.menuShift(forMenu);
 				Sbls.removeSubble(forMenu);
@@ -373,6 +380,7 @@ var Sbls = {
 			}
 			theta += increment;
 			this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+			
 			this.mouseForSelection = false;
 		} else {
 			this.mouseForSelection = true;
