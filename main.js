@@ -82,7 +82,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
 	
-	s = 0;
+	s = "noll";
 }
 
 
