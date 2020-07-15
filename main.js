@@ -87,7 +87,7 @@ function setup() {
 
 
 class Subble {
-	constructor(X, Y, R, NAME, PARENTS) {
+	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
@@ -103,6 +103,9 @@ class Subble {
 		this.generation = 0;
 		this.children = [];
 		this.parents = [];
+		if (GENERATION !== undefined) {
+		    this.generation = GENERATION;
+		    }
 		if (PARENTS === [null]) {
 			this.parents = [];
 		} else {
@@ -331,6 +334,7 @@ var Sbls = {
 	menuShift(OBJ) {
 		let forMenu = null;
 		if (this.menu === null) {
+			s = OBJ.generation;
 			forMenu = OBJ;
 			this.alternatives = [];
 			const optionRadius = height /24;
@@ -341,7 +345,7 @@ var Sbls = {
 			//To add subble
 			const alt1 = function() {
 				const vec = DrawZ.invertScaled(mouseX, mouseY);
-				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu]);
+				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
 				Sbls.render();
 				Sbls.editName(subble);
 				Sbls.menuShift(forMenu); //Last edit
@@ -447,5 +451,5 @@ function draw() {
 	Sbls.draw();
 	textSize(12);
 	fill(255);
-	text(str(str(s) +" " +str("")), 400, 400);
+	text(str(str(s) +" " +str("gen")), 400, 400);
 }
