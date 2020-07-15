@@ -89,6 +89,8 @@ function setup() {
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS) {
 		this.pos = [X, Y];
+		//edit
+		this.gridPos = [X, Y];
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
 			for(let i = 0; i < 4; i++) {
@@ -124,6 +126,9 @@ class Subble {
 			}
 			obj1.decideTravelers(BOOL);
 		}
+	}
+	gridAlign() {
+		//last edit
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
