@@ -131,7 +131,7 @@ class Subble {
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
-			if (CHILD.generation <= this.generation || CHILD.parents.length === 0) {
+			if (CHILD.generation <= this.generation || CHILD.parents.length < 1) {
 			    CHILD.generation = this.generation +1;
 			}
 			CHILD.parents.push(this);
