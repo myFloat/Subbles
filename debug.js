@@ -1,5 +1,4 @@
-setup() {
+function setup() {
   createCanvas(windowWidth, windowHeight);
+  ellipse(0, 0, 40, 40;
 }
-
-ellipse(0, 0, 20, 20);
