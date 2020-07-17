@@ -81,7 +81,7 @@ function setup() {
 	Sbls.createSubble(0, 0, 144);
 	//Subbles
 	Sbls.render();
-	
+  
 	s = "noll";
 }
 
@@ -89,6 +89,8 @@ function setup() {
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
+    //edit
+		this.gridPos = [X, Y];
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
 			for(let i = 0; i < 4; i++) {
@@ -129,11 +131,13 @@ class Subble {
 			obj1.decideTravelers(BOOL);
 		}
 	}
+  gridAlign() {
+		//last edit
+	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
 			if (CHILD.generation <= this.generation || CHILD.parents.length < 1) {
 			    CHILD.changeGeneration(this.generation +1);
-			}
 			CHILD.parents.push(this);
 			this.children.push(CHILD);
 			CHILD.changeAncestor(this.ancestor);
@@ -394,7 +398,7 @@ var Sbls = {
 			}
 			theta += increment;
 			this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
-			
+
 			this.mouseForSelection = false;
 		} else {
 			this.mouseForSelection = true;
