@@ -296,6 +296,7 @@ var Sbls = {
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
 				this.moveTravelers(deltaX, deltaY);
 			}
+			obj1.gridAlign();
 		}
 		if (this.input !== null) {
 			if (this.input.elt !== document.activeElement) {
