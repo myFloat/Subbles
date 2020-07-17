@@ -89,7 +89,7 @@ function setup() {
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
-    //edit
+		//edit
 		this.gridPos = [X, Y];
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
@@ -131,7 +131,7 @@ class Subble {
 			obj1.decideTravelers(BOOL);
 		}
 	}
-  gridAlign() {
+	gridAlign() {
 		//last edit
 	}
 	adopt(CHILD) {
