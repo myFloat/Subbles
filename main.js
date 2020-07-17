@@ -89,7 +89,7 @@ function setup() {
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
-    //edit
+		//edit
 		this.gridPos = [X, Y];
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
@@ -131,8 +131,11 @@ class Subble {
 			obj1.decideTravelers(BOOL);
 		}
 	}
-  gridAlign() {
-		//last edit
+	gridAlign() {
+		const delta = math.subtract(this.pos, this.parents[0].pos);
+		const genScalar = pow(2, this.generation);
+		this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
+		this.pos = math.add(math.divide(this.gridPos, genScalar), this.parents[0].pos);
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
@@ -153,7 +156,7 @@ class Subble {
 			CHILD.changeAncestor(CHILD.parents[0].ancestor);
 			//CHILD.changeGeneration(CHILD.ancestor.generation +1);
 		} else {
-			CHILD.changeGeneration(CHILD.ancestor.generation);
+			CHILD.changeGeneration(CHILD.parents[0].generation);
 			CHILD.changeAncestor(CHILD);
 		}
 	}
@@ -293,6 +296,7 @@ var Sbls = {
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
 				this.moveTravelers(deltaX, deltaY);
 			}
+			obj1.gridAlign();
 		}
 		if (this.input !== null) {
 			if (this.input.elt !== document.activeElement) {
