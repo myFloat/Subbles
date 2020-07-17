@@ -138,6 +138,7 @@ class Subble {
 		if (this.parents.indexOf(CHILD) === -1) {
 			if (CHILD.generation <= this.generation || CHILD.parents.length < 1) {
 			    CHILD.changeGeneration(this.generation +1);
+			}
 			CHILD.parents.push(this);
 			this.children.push(CHILD);
 			CHILD.changeAncestor(this.ancestor);
