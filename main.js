@@ -132,7 +132,7 @@ class Subble {
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
 			if (CHILD.generation <= this.generation || CHILD.parents.length < 1) {
-			    CHILD.generation = this.generation +1;
+			    CHILD.changeGeneration(this.generation +1);
 			}
 			CHILD.parents.push(this);
 			this.children.push(CHILD);
@@ -146,11 +146,16 @@ class Subble {
 		this.children.splice(this.children.indexOf(CHILD), 1);
 		if (CHILD.parents.length > 0) {
 			CHILD.changeAncestor(CHILD.parents[0].ancestor);
-			//CHILD.generation(CHILD.ancestor).generation +1;
+			//CHILD.changeGeneration(CHILD.ancestor.generation +1);
 		} else {
-			CHILD.generation = CHILD.ancestor.generation;
+			CHILD.changeGeneration(CHILD.ancestor.generation);
 			CHILD.changeAncestor(CHILD);
 		}
+	}
+	changeGeneration(GEN) {
+		this.generation = GEN;
+		this.radius = 144 *pow(1/2, GEN);
+		//Last edit
 	}
 	changeAncestor(ANCESTOR) {
 		this.ancestor = ANCESTOR;
@@ -456,5 +461,5 @@ function draw() {
 	Sbls.draw();
 	textSize(12);
 	fill(255);
-	text(str("gen:") +" " +str(str(s)), 400, 400);
+	text(str(DrawZ.isTouchscreen) +" " +str(str(s)), 400, 400);
 }
