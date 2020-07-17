@@ -132,7 +132,10 @@ class Subble {
 		}
 	}
 	gridAlign() {
-		//last edit
+		const delta = math.subtract(this.pos[0], parent[0].pos);
+		const genScalar = pow(2, this.generation);
+		this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
+		this.pos = math.add(math.divide(this.gridPos, genScalar), parent[0].pos);
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
