@@ -154,9 +154,9 @@ class Subble {
 		this.children.splice(this.children.indexOf(CHILD), 1);
 		if (CHILD.parents.length > 0) {
 			CHILD.changeAncestor(CHILD.parents[0].ancestor);
-			//CHILD.changeGeneration(CHILD.ancestor.generation +1);
+			//CHILD.changeGeneration(this.generation +1);
 		} else {
-			CHILD.changeGeneration(CHILD.parents[0].generation);
+			CHILD.changeGeneration(this.generation);
 			CHILD.changeAncestor(CHILD);
 		}
 	}
