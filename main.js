@@ -171,6 +171,12 @@ class Subble {
 			obj1.changeAncestor(ANCESTOR);
 		}
 	}
+	forOffspring(FUNCTION) { //Do for all children, grandchildren, a.s.f...
+		for(const obj1 of this.children) {
+			FUNCTION(obj1);
+			obj1.forOffspring(FUNCTION);
+		}
+	}
 	selectShift() {
 		this.selected = !this.selected;
 		if (this.selected) {
