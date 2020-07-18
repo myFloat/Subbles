@@ -165,7 +165,7 @@ class Subble {
 		this.radius = 144 *pow(1/2, GEN);
 		const f = function(CHILD, PARENT) {
 			if (CHILD.generation <= PARENT.generation || CHILD.parents.length === 1) {
-				CHILD.changeGeneration(PARENT +1);
+				CHILD.changeGeneration(PARENT.generation +1);
 			}
 		}
 		this.forOffspring(f);
