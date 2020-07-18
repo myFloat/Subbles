@@ -163,7 +163,12 @@ class Subble {
 	changeGeneration(GEN) {
 		this.generation = GEN;
 		this.radius = 144 *pow(1/2, GEN);
-		//Last edit
+		const f = function(CHILD, PARENT) {
+			if (CHILD.generation <= PARENT.generation || CHILD.parents.length === 1) {
+				CHILD.changeGeneration(PARENT +1);
+			}
+		}
+		this.forOffspring(f);
 	}
 	changeAncestor(ANCESTOR) {
 		this.ancestor = ANCESTOR;
@@ -173,7 +178,7 @@ class Subble {
 	}
 	forOffspring(FUNCTION) { //Do for all children, grandchildren, a.s.f...
 		for(const obj1 of this.children) {
-			FUNCTION(obj1);
+			FUNCTION(obj1, this);
 			obj1.forOffspring(FUNCTION);
 		}
 	}
