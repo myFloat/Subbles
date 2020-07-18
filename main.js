@@ -154,21 +154,32 @@ class Subble {
 		this.children.splice(this.children.indexOf(CHILD), 1);
 		if (CHILD.parents.length > 0) {
 			CHILD.changeAncestor(CHILD.parents[0].ancestor);
-			//CHILD.changeGeneration(CHILD.ancestor.generation +1);
+			//CHILD.changeGeneration(this.generation +1);
 		} else {
-			CHILD.changeGeneration(CHILD.parents[0].generation);
+			CHILD.changeGeneration(this.generation);
 			CHILD.changeAncestor(CHILD);
 		}
 	}
 	changeGeneration(GEN) {
 		this.generation = GEN;
 		this.radius = 144 *pow(1/2, GEN);
-		//Last edit
+		const f = function(CHILD, PARENT) {
+			if (CHILD.generation <= PARENT.generation || CHILD.parents.length === 1) {
+				CHILD.changeGeneration(PARENT.generation +1);
+			}
+		}
+		this.forOffspring(f);
 	}
 	changeAncestor(ANCESTOR) {
 		this.ancestor = ANCESTOR;
 		for(const obj1 of this.children) {
 			obj1.changeAncestor(ANCESTOR);
+		}
+	}
+	forOffspring(FUNCTION) { //Do for all children, grandchildren, a.s.f...
+		for(const obj1 of this.children) {
+			FUNCTION(obj1, this);
+			obj1.forOffspring(FUNCTION);
 		}
 	}
 	selectShift() {
