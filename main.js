@@ -132,10 +132,16 @@ class Subble {
 		}
 	}
 	gridAlign() {
-		const delta = math.subtract(this.pos, this.parents[0].pos);
+		let parentPos = [0, 0];
+		if (this.parents.length > 0) {
+			parentPos = this.parents[0].pos;
+		}
+		const delta = math.subtract(this.pos, parentPos);
 		const genScalar = pow(1 /Sbls.generationGap, this.generation);
 		this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
-		return math.add(math.divide(this.gridPos, genScalar), this.parents[0].pos);
+		const newPos = math.add(math.divide(this.gridPos, genScalar), parentPos);
+		const correction = math.subtract(newPos, this.pos);
+		Sbls.moveTravelers(correction[0], correction[1]);
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
@@ -308,9 +314,7 @@ var Sbls = {
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
 				this.moveTravelers(deltaX, deltaY);
 			}
-			const gridPos = obj1.gridAlign();
-			const delta = math.subtract(gridPos, obj1.pos);
-			this.moveTravelers(delta[0], delta[1]);
+			obj1.gridAlign();
 		}
 		if (this.input !== null) {
 			if (this.input.elt !== document.activeElement) {
