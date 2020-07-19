@@ -81,14 +81,16 @@ function setup() {
 	Sbls.createSubble(0, 0, 144);
 	//Subbles
 	Sbls.render();
-	
-	s = "noll";
+  
+	s = "v4";
 }
 
 
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
+		//edit
+		this.gridPos = [X, Y];
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
 			for(let i = 0; i < 4; i++) {
@@ -129,6 +131,18 @@ class Subble {
 			obj1.decideTravelers(BOOL);
 		}
 	}
+	gridAlign() {
+		let parentPos = [0, 0];
+		if (this.parents.length > 0) {
+			parentPos = this.parents[0].pos;
+		}
+		const delta = math.subtract(this.pos, parentPos);
+		const genScalar = pow(1 /Sbls.generationGap, this.generation);
+		this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
+		const newPos = math.add(math.divide(this.gridPos, genScalar), parentPos);
+		const correction = math.subtract(newPos, this.pos);
+		Sbls.moveTravelers(correction[0], correction[1]);
+	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
 			if (CHILD.generation <= this.generation || CHILD.parents.length < 1) {
@@ -146,21 +160,32 @@ class Subble {
 		this.children.splice(this.children.indexOf(CHILD), 1);
 		if (CHILD.parents.length > 0) {
 			CHILD.changeAncestor(CHILD.parents[0].ancestor);
-			//CHILD.changeGeneration(CHILD.ancestor.generation +1);
+			//CHILD.changeGeneration(this.generation +1);
 		} else {
-			CHILD.changeGeneration(CHILD.ancestor.generation);
+			CHILD.changeGeneration(this.generation);
 			CHILD.changeAncestor(CHILD);
 		}
 	}
 	changeGeneration(GEN) {
 		this.generation = GEN;
-		this.radius = 144 *pow(1/2, GEN);
-		//Last edit
+		this.radius = 144 *pow(Sbls.generationGap, GEN);
+		const f = function(CHILD, PARENT) {
+			if (CHILD.generation <= PARENT.generation || CHILD.parents.length === 1) {
+				CHILD.changeGeneration(PARENT.generation +1);
+			}
+		}
+		this.forOffspring(f);
 	}
 	changeAncestor(ANCESTOR) {
 		this.ancestor = ANCESTOR;
 		for(const obj1 of this.children) {
 			obj1.changeAncestor(ANCESTOR);
+		}
+	}
+	forOffspring(FUNCTION) { //Do for all children, grandchildren, a.s.f...
+		for(const obj1 of this.children) {
+			FUNCTION(obj1, this);
+			obj1.forOffspring(FUNCTION);
 		}
 	}
 	selectShift() {
@@ -178,9 +203,10 @@ var Sbls = {
 	instancesSelected: [], 
 	travelers: [], 
 	mouseForSelection: true, 
-	menu: null, 
+	generationGap: 1/2, //Size proportion from each subble to its child
 	input: null, 
 	//Menu
+	menu: null, 
 	alternatives: [], 
 
 	createSubble(X, Y, R, NAME, PARENTS, GENERATION) {
@@ -288,6 +314,17 @@ var Sbls = {
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
 				this.moveTravelers(deltaX, deltaY);
 			}
+			if (obj1.selected) {
+				let oldest = obj1;
+				for(const obj2 of Sbls.travelers) {
+					if (obj2.generation < oldest.generation) {
+						oldest = obj2;
+					}
+				}
+				oldest.gridAlign();
+			} else {
+				obj1.gridAlign();
+			}
 		}
 		if (this.input !== null) {
 			if (this.input.elt !== document.activeElement) {
@@ -349,7 +386,7 @@ var Sbls = {
 			this.alternatives = [];
 			const optionRadius = height /24;
 			const circleRadius = height /6;
-			const increment = PI *2/3;	//Change this when adding alt-functions
+			const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 			let theta = PI /2;
 			
 			//To add subble
@@ -358,7 +395,7 @@ var Sbls = {
 				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
 				Sbls.render();
 				Sbls.editName(subble);
-				Sbls.menuShift(forMenu); //Last edit
+				Sbls.menuShift(forMenu); //Something was to be done around here
 			}
 			const draw1 = function(POS) {
 				fill(0);
@@ -394,7 +431,7 @@ var Sbls = {
 			}
 			theta += increment;
 			this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
-			
+
 			this.mouseForSelection = false;
 		} else {
 			this.mouseForSelection = true;
