@@ -133,7 +133,7 @@ class Subble {
 	}
 	gridAlign() {
 		const delta = math.subtract(this.pos, this.parents[0].pos);
-		const genScalar = pow(2, this.generation);
+		const genScalar = pow(1 /Sbls.generationGap, this.generation);
 		this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
 		this.pos = math.add(math.divide(this.gridPos, genScalar), this.parents[0].pos);
 	}
@@ -162,7 +162,7 @@ class Subble {
 	}
 	changeGeneration(GEN) {
 		this.generation = GEN;
-		this.radius = 144 *pow(1/2, GEN);
+		this.radius = 144 *pow(Sbls.generationGap, GEN);
 		const f = function(CHILD, PARENT) {
 			if (CHILD.generation <= PARENT.generation || CHILD.parents.length === 1) {
 				CHILD.changeGeneration(PARENT.generation +1);
@@ -197,9 +197,10 @@ var Sbls = {
 	instancesSelected: [], 
 	travelers: [], 
 	mouseForSelection: true, 
-	menu: null, 
+	generationGap: 1/2, //Size proportion from each subble to its child
 	input: null, 
 	//Menu
+	menu: null, 
 	alternatives: [], 
 
 	createSubble(X, Y, R, NAME, PARENTS, GENERATION) {
@@ -369,7 +370,7 @@ var Sbls = {
 			this.alternatives = [];
 			const optionRadius = height /24;
 			const circleRadius = height /6;
-			const increment = PI *2/3;	//Change this when adding alt-functions
+			const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 			let theta = PI /2;
 			
 			//To add subble
@@ -378,7 +379,7 @@ var Sbls = {
 				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
 				Sbls.render();
 				Sbls.editName(subble);
-				Sbls.menuShift(forMenu); //Last edit
+				Sbls.menuShift(forMenu); //Something was to be done around here
 			}
 			const draw1 = function(POS) {
 				fill(0);
