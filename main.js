@@ -314,7 +314,17 @@ var Sbls = {
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
 				this.moveTravelers(deltaX, deltaY);
 			}
-			obj1.gridAlign();
+			if (obj1.selected) {
+				let oldest = obj1;
+				for(const obj2 of Sbls.travelers) {
+					if (obj2.generation < oldest.generation) {
+						oldest = obj2;
+					}
+				}
+				oldest.gridAlign();
+			} else {
+				obj1.gridAlign();
+			}
 		}
 		if (this.input !== null) {
 			if (this.input.elt !== document.activeElement) {
