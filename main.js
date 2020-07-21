@@ -129,7 +129,6 @@ class Subble {
 				Sbls.travelers.push(CHILD);
 			}
 		}
-		f(this);
 		this.forOffspring(f);
 	}
 	gridAlign() {
