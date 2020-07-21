@@ -10,31 +10,25 @@ window.oncontextmenu = function() {
 	return false;
 }
 function mouseDragged() {
-	dragged();
+	cursorDragged();
 	DrawZ.mouseDragged();
 }
 function touchMoved() {
-	dragged();
+	cursorDragged();
 	DrawZ.touchMoved();
 	return false;
 }
+function mousePressed() {
+	cursorPressed();
+}
 function touchStarted() {
-	DrawZ.touchStarted();
-	DrawZ.mouseForCamera = false;
-	Sbls.collisionMouse();
-	if (touches.length === 3) {
-		if (clickedObject !== null) {
-			Sbls.menuShift(clickedObject);
-		}
-	}
+	cursorPressed();
+}
+function mouseReleased() {
+	cursorReleased();
 }
 function touchEnded() {
-	DrawZ.touchEnded();
-	Sbls.collisionOther();
-	if (Sbls.menu !== null && DrawZ.isTouchscreen && touches.length === 0) {
-		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
-		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
-	}
+	cursorReleased();
 }
 function mouseWheel() {
 	DrawZ.mouseWheel(event);
@@ -82,10 +76,52 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v4";
+	s = "v5";
 }
 
 
+function cursorDragged() {
+	if (clickedObject !== null && Sbls.mouseForSelection) {
+		if (DrawZ.isTouchscreen || mouseButton === LEFT) {
+			if (touches.length < 2) {
+				let obj1 = clickedObject;
+				let mousePos = DrawZ.invertScaled(mouseX, mouseY);
+				if (0 <= mouseX && mouseX <= width) {
+					const deltaX = -obj1.pos[0] +mousePos[0] +clickOffset[0];
+					Sbls.moveTravelers(deltaX, 0);
+				}
+				if (0 <= mouseY && mouseY <= height) {
+					const deltaY = -obj1.pos[1] +mousePos[1] +clickOffset[1];
+					Sbls.moveTravelers(0, deltaY);
+				}
+			}
+		} else {
+			DrawZ.mouseForCamera = true;
+		}
+	} else {
+		if (mouseButton === RIGHT) {
+			DrawZ.mouseForCamera = true;
+		}
+	}
+}
+function cursorPressed() {
+	DrawZ.touchStarted();
+	DrawZ.mouseForCamera = false;
+	Sbls.collisionMouse();
+	if (touches.length === 3) {
+		if (clickedObject !== null) {
+			Sbls.menuShift(clickedObject);
+		}
+	}
+}
+function cursorReleased() {
+	DrawZ.touchEnded();
+	Sbls.collisionOther();
+	if (Sbls.menu !== null && DrawZ.isTouchscreen && touches.length === 0) {
+		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
+		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
+	}
+}
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
@@ -465,30 +501,6 @@ var Sbls = {
 		}
 	}, 
 	Subble
-}
-function dragged() {
-	if (clickedObject !== null && Sbls.mouseForSelection) {
-		if (DrawZ.isTouchscreen || mouseButton === LEFT) {
-			if (touches.length < 2) {
-				let obj1 = clickedObject;
-				let mousePos = DrawZ.invertScaled(mouseX, mouseY);
-				if (0 <= mouseX && mouseX <= width) {
-					const deltaX = -obj1.pos[0] +mousePos[0] +clickOffset[0];
-					Sbls.moveTravelers(deltaX, 0);
-				}
-				if (0 <= mouseY && mouseY <= height) {
-					const deltaY = -obj1.pos[1] +mousePos[1] +clickOffset[1];
-					Sbls.moveTravelers(0, deltaY);
-				}
-			}
-		} else {
-			DrawZ.mouseForCamera = true;
-		}
-	} else {
-		if (mouseButton === RIGHT) {
-			DrawZ.mouseForCamera = true;
-		}
-	}
 }
 
 function draw() {
