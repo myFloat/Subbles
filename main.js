@@ -160,12 +160,13 @@ class Subble {
 		}
 	}
 	decideTravelers(BOOL) {
-		for(const obj1 of this.children) {
-			if (obj1.selected === BOOL) {
-				Sbls.travelers.push(obj1);
+		const f = function(CHILD, PARENT) {
+			if (CHILD.selected === BOOL) {
+				Sbls.travelers.push(CHILD);
 			}
-			obj1.decideTravelers(BOOL);
 		}
+		f(this);
+		this.forOffspring(f);
 	}
 	gridAlign() {
 		let parentPos = [0, 0];
