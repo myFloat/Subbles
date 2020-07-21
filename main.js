@@ -76,7 +76,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v5";
+	s = "v6";
 }
 
 
