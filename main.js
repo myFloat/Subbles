@@ -76,7 +76,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v7";
+	s = "v8";
 }
 
 
@@ -125,7 +125,6 @@ function cursorReleased() {
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
-		this.gridAlign();
 		this.gridPos = [X, Y]; //a.k.a. local coordinates
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
@@ -158,6 +157,7 @@ class Subble {
 		} else {
 			this.ancestor = this;
 		}
+		this.gridAlign();
 	}
 	decideTravelers(BOOL) {
 		Sbls.travelers = [];
