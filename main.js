@@ -125,7 +125,6 @@ function cursorReleased() {
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
-		Sbls.travelers = [];
 		this.gridAlign();
 		this.gridPos = [X, Y]; //a.k.a. local coordinates
 		if (NAME === undefined) {
@@ -161,6 +160,7 @@ class Subble {
 		}
 	}
 	decideTravelers(BOOL) {
+		Sbls.travelers = [];
 		const f = function(CHILD, PARENT) {
 			if (CHILD.selected === BOOL) {
 				Sbls.travelers.push(CHILD);
@@ -176,6 +176,12 @@ class Subble {
 		const delta = math.subtract(this.pos, parentPos);
 		const genScalar = pow(1 /Sbls.generationGap, this.generation);
 		this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
+		if (this.gridPos[0] > Sbls.parentMaxGap) {
+			this.gridPos[0] = Sbls.parentMaxGap;
+		}
+		if (this.gridPos[1] > Sbls.parentMaxGap) {
+			this.gridPos[1] = Sbls.parentMaxGap;
+		}
 		const newPos = math.add(math.divide(this.gridPos, genScalar), parentPos);
 		const correction = math.subtract(newPos, this.pos);
 		Sbls.moveTravelers(correction[0], correction[1]);
@@ -306,7 +312,6 @@ var Sbls = {
 					const mousePos = DrawZ.invertScaled(mouseX, mouseY);
 					clickOffset = [-mousePos[0] +obj1.pos[0], -mousePos[1] +obj1.pos[1]];
 					obj1.pickedUpPos = obj1.pos.slice();
-					this.travelers = [];
 					if (obj1.selected) {
 						for(const obj2 of this.instancesSelected) {
 							obj2.decideTravelers(obj2.selected);
