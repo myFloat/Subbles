@@ -247,7 +247,7 @@ var Sbls = {
 	travelers: [], 
 	mouseForSelection: true, 
 	generationGap: 1/2, //Size proportion from each subble to its child
-	parentMaxGap: 999; //Max allowed distance to parents in local coordinates
+	parentMaxGap: 999, //Max allowed distance to parents in local coordinates
 	input: null, 
 	//Menu
 	menu: null, 
