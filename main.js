@@ -166,6 +166,7 @@ class Subble {
 				Sbls.travelers.push(CHILD);
 			}
 		}
+		f(this);
 		this.forOffspring(f);
 	}
 	gridAlign() {
@@ -322,10 +323,8 @@ var Sbls = {
 								this.travelers.splice(index, 1);
 								index = this.travelers.indexOf(obj2);
 							}
-							this.travelers.push(obj2);
 						}
 					} else {
-						Sbls.travelers.push(obj1);
 						obj1.decideTravelers(obj1.selected);
 					}
 				}
