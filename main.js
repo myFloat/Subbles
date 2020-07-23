@@ -314,15 +314,9 @@ var Sbls = {
 					clickOffset = [-mousePos[0] +obj1.pos[0], -mousePos[1] +obj1.pos[1]];
 					obj1.pickedUpPos = obj1.pos.slice();
 					if (obj1.selected) {
+						this.travelers = [];
 						for(const obj2 of this.instancesSelected) {
-							obj2.decideTravelers(obj2.selected);
-						}
-						for(const obj2 of this.instancesSelected) {
-							let index = this.travelers.indexOf(obj2);
-							while(index !== -1) {
-								this.travelers.splice(index, 1);
-								index = this.travelers.indexOf(obj2);
-							}
+							this.travelers.push(obj2);
 						}
 					} else {
 						obj1.decideTravelers(obj1.selected);
