@@ -157,7 +157,7 @@ class Subble {
 		} else {
 			this.ancestor = this;
 		}
-		this.gridAlign();
+		this.gridAlign([this]);
 	}
 	decideTravelers(BOOL) {
 		Sbls.travelers = [];
@@ -169,7 +169,7 @@ class Subble {
 		f(this);
 		this.forOffspring(f);
 	}
-	gridAlign() {
+	gridAlign(TRAVELERS) {
 		let newPos;
 		if (this.parents.length > 0) {
 			const parentPos = this.parents[0].pos;
@@ -194,6 +194,7 @@ class Subble {
 			newPos = this.gridPos;
 		}
 		const correction = math.subtract(newPos, this.pos);
+		Sbls.travelers = TRAVELERS.slice();
 		Sbls.moveTravelers(correction[0], correction[1]);
 	}
 	adopt(CHILD) {
@@ -366,9 +367,9 @@ var Sbls = {
 						oldest = obj2;
 					}
 				}
-				oldest.gridAlign();
+				oldest.gridAlign(Sbls.travelers);
 			} else {
-				obj1.gridAlign();
+				obj1.gridAlign(Sbls.travelers);
 			}
 		}
 		if (this.input !== null) {
