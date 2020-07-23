@@ -170,20 +170,29 @@ class Subble {
 		this.forOffspring(f);
 	}
 	gridAlign() {
-		let parentPos = [0, 0];
+		let newPos;
 		if (this.parents.length > 0) {
-			parentPos = this.parents[0].pos;
+			const parentPos = this.parents[0].pos;
+			const delta = math.subtract(this.pos, parentPos);
+			const genScalar = pow(1 /Sbls.generationGap, this.generation);
+			this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
+			if (max(abs(this.gridPos[0]), abs(this.gridPos[1])) > Sbls.parentMaxGap) { //If any coordinate is beyond limit
+				if (this.gridPos[0] < -Sbls.parentMaxGap) {
+					this.gridPos[0] = -Sbls.parentMaxGap;
+				} else if (this.gridPos[0] > Sbls.parentMaxGap) {
+					this.gridPos[0] = Sbls.parentMaxGap;
+				}
+				if (this.gridPos[1] < -Sbls.parentMaxGap) {
+					this.gridPos[1] = -Sbls.parentMaxGap;
+				} else if (this.gridPos[1] > Sbls.parentMaxGap) {
+					this.gridPos[1] = Sbls.parentMaxGap;
+				}
+			}
+			newPos = math.add(math.divide(this.gridPos, genScalar), parentPos);
+		} else {
+			this.gridPos = [round(this.pos[0]), round(this.pos[1])];
+			newPos = this.gridPos;
 		}
-		const delta = math.subtract(this.pos, parentPos);
-		const genScalar = pow(1 /Sbls.generationGap, this.generation);
-		this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
-		if (this.gridPos[0] > Sbls.parentMaxGap) {
-			this.gridPos[0] = Sbls.parentMaxGap;
-		}
-		if (this.gridPos[1] > Sbls.parentMaxGap) {
-			this.gridPos[1] = Sbls.parentMaxGap;
-		}
-		const newPos = math.add(math.divide(this.gridPos, genScalar), parentPos);
 		const correction = math.subtract(newPos, this.pos);
 		Sbls.moveTravelers(correction[0], correction[1]);
 	}
