@@ -39,7 +39,7 @@ function cameraMoved() {
 }
 function singleTap() {
 	if (clickedObject === null) {
-		if (DrawZ.isTouchScreen && mouseButton === RIGHT) {
+		if (!DrawZ.isTouchScreen && mouseButton === RIGHT) {
 			Sbls.menushift([mouseX, mouseY]);
 		}
 	} else {
