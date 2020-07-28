@@ -492,6 +492,13 @@ var Sbls = {
 					Sbls.editName(subble);
 					Sbls.menuShift(forMenu);
 				}
+				const draw1 = function(POS) {
+					fill(0);
+					textSize(optionRadius *2);
+					text("+", POS[0], POS[1] +optionRadius *0.6);
+				}
+				theta += increment;
+				this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
 			}
 			this.mouseForSelection = false;
 		} else {
