@@ -174,7 +174,7 @@ class Subble {
 		if (this.parents.length > 0) {
 			const parentPos = this.parents[0].pos;
 			const delta = math.subtract(this.pos, parentPos);
-			const genScalar = pow(1 /Sbls.generationGap, this.generation);
+			const genScalar = pow(1 /Sbls.generationGap, this.parents[0].generation +1);
 			this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
 			if (max(abs(this.gridPos[0]), abs(this.gridPos[1])) > Sbls.parentMaxGap) { //If any coordinate is beyond limit
 				if (this.gridPos[0] < -Sbls.parentMaxGap) {
