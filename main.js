@@ -396,7 +396,7 @@ var Sbls = {
 			}
 			fill(obj1.color);
 			DrawZ.ellipseScaled(obj1.pos[0], obj1.pos[1], obj1.radius *2);
-			fill(0);
+			fill(255);
 			DrawZ.textScaled(obj1.name, obj1.pos[0] -obj1.radius *0, obj1.pos[1], obj1.radius /2);
 		}
 		if (this.menu !== null) {
