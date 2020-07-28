@@ -38,7 +38,11 @@ function cameraMoved() {
 	Sbls.render();
 }
 function singleTap() {
-	if (clickedObject !== null) {
+	if (clickedObject === null) {
+		if (DrawZ.isTouchScreen && mouseButton === RIGHT) {
+			Sbls.menushift([mouseX, mouseY]);
+		}
+	} else {
 		if (DrawZ.isTouchscreen || mouseButton === LEFT) {
 			if (Sbls.mouseForSelection) {
 				clickedObject.selectShift();
@@ -47,8 +51,6 @@ function singleTap() {
 		} else {
 			Sbls.menuShift(clickedObject);
 		}
-	} else { //Not used. Note: triggered if clickedObject is set to null in previous block
-		
 	}
 	if (Sbls.menu !== null && mouseButton !== RIGHT) {
 		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
