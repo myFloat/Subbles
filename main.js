@@ -40,7 +40,7 @@ function cameraMoved() {
 function singleTap() {
 	if (clickedObject === null) {
 		if (!DrawZ.isTouchScreen && mouseButton === RIGHT) {
-			Sbls.menushift([mouseX, mouseY]);
+			Sbls.menuShift([mouseX, mouseY]);
 		}
 	} else {
 		if (DrawZ.isTouchscreen || mouseButton === LEFT) {
@@ -114,7 +114,7 @@ function cursorPressed() {
 		if (clickedObject !== null) {
 			Sbls.menuShift(clickedObject);
 		} else {
-			Sbls.menushift([touches[0].x, touches[0].y]);
+			Sbls.menuShift([touches[0].x, touches[0].y]);
 		}
 	}
 }
