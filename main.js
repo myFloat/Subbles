@@ -44,7 +44,7 @@ function singleTap() {
 				clickedObject.selectShift();
 				clickedObject = null;
 			}
-		} else { //Does else mean nor?
+		} else {
 			Sbls.menuShift(clickedObject);
 		}
 	} else { //Not used. Note: triggered if clickedObject is set to null in previous block
@@ -111,6 +111,8 @@ function cursorPressed() {
 	if (touches.length === 3) {
 		if (clickedObject !== null) {
 			Sbls.menuShift(clickedObject);
+		} else {
+			Sbls.menushift([touches[0].x, touches[0].y]);
 		}
 	}
 }
@@ -427,57 +429,68 @@ var Sbls = {
 	menuShift(OBJ) {
 		let forMenu = null;
 		if (this.menu === null) {
-			s = OBJ.generation;
 			forMenu = OBJ;
 			this.alternatives = [];
 			const optionRadius = height /24;
 			const circleRadius = height /6;
-			const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 			let theta = PI /2;
-			
-			//To add subble
-			const alt1 = function() {
-				const vec = DrawZ.invertScaled(mouseX, mouseY);
-				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
-				Sbls.render();
-				Sbls.editName(subble);
-				Sbls.menuShift(forMenu); //Something was to be done around here
-			}
-			const draw1 = function(POS) {
-				fill(0);
-				textSize(optionRadius *2);
-				text("+", POS[0], POS[1] +optionRadius *0.6);
-			}
-			theta += increment;
-			this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
-			
-			//To edit name
-			const alt2 = function() {
-				Sbls.editName(forMenu);
-				Sbls.menuShift(forMenu);
-			}
-			const draw2 = function(POS) {
-				textSize(optionRadius /2);
-				fill(0);
-				text('"' +forMenu.name +'"', POS[0], POS[1] +optionRadius *0.1);
-			}
-			theta += increment;
-			this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
-			
-			//To remove bubble
-			const alt3 = function() {
-				Sbls.menuShift(forMenu);
-				Sbls.removeSubble(forMenu);
-				Sbls.render();
-			}
-			const draw3 = function(POS) {
-				fill(0);
-				textSize(optionRadius *2);
-				text("🗑", POS[0], POS[1] +optionRadius *0.6);
-			}
-			theta += increment;
-			this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+			if (OBJ.length === undefined) {
+				const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
+				
+				//To add subble to bubble
+				const alt1 = function() {
+					const vec = DrawZ.invertScaled(mouseX, mouseY);
+					const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
+					Sbls.render();
+					Sbls.editName(subble);
+					Sbls.menuShift(forMenu); //Something was to be done around here
+				}
+				const draw1 = function(POS) {
+					fill(0);
+					textSize(optionRadius *2);
+					text("+", POS[0], POS[1] +optionRadius *0.6);
+				}
+				theta += increment;
+				this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
 
+				//To edit name
+				const alt2 = function() {
+					Sbls.editName(forMenu);
+					Sbls.menuShift(forMenu);
+				}
+				const draw2 = function(POS) {
+					textSize(optionRadius /2);
+					fill(0);
+					text('"' +forMenu.name +'"', POS[0], POS[1] +optionRadius *0.1);
+				}
+				theta += increment;
+				this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
+
+				//To remove bubble
+				const alt3 = function() {
+					Sbls.menuShift(forMenu);
+					Sbls.removeSubble(forMenu);
+					Sbls.render();
+				}
+				const draw3 = function(POS) {
+					fill(0);
+					textSize(optionRadius *2);
+					text("🗑", POS[0], POS[1] +optionRadius *0.6);
+				}
+				theta += increment;
+				this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+			} else {
+				const increment = PI *2/1;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
+				
+				//To add parentless bubble
+				const alt1 = function() {
+					const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+					const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New");
+					Sbls.render();
+					Sbls.editName(subble);
+					Sbls.menuShift(forMenu);
+				}
+			}
 			this.mouseForSelection = false;
 		} else {
 			this.mouseForSelection = true;
