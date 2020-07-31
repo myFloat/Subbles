@@ -6,6 +6,70 @@
 //	Button for touchscreen
 //General do for all children method (maybe)
 
+let toStorage;
+function compile() { //RUNNING THIS puts the UI out of function permanently
+    let content = [];
+    for(const obj1 of Sbls.instances) {
+        content.push(Object.assign({}, obj1));
+    }
+    toStorage = content;
+        for(let j = 0; j < Sbls.instances.length; j++) {
+        const obj1 = toStorage[j];
+        for(let i = 0; i < obj1.parents.length; i++) {
+            obj1.parents[i] = Sbls.instances.indexOf(Sbls.instances[j].parents[i]);
+        }
+        for(let i = 0; i < obj1.children.length; i++) {
+            obj1.children[i] = Sbls.instances.indexOf(Sbls.instances[j].children[i]);
+        }
+        obj1.ancestor = Sbls.instances.indexOf(Sbls.instances[j].ancestor);
+    }
+}
+function saveFile(NAME) {
+    localStorage.setItem(NAME, JSON.stringify(toStorage));
+}
+function saveText() {
+    return JSON.stringify(toStorage);
+}
+
+function loadFile(NAME) {
+	Sbls.instances = [];
+	let fromStorage = JSON.parse(localStorage.getItem(NAME));
+	for(let i = 0; i < fromStorage.length; i++) {
+		const obj1 = fromStorage[i];
+		Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
+	}
+	for(let j = 0; j < fromStorage.length; j++) {
+		const obj1 = Sbls.instances[j];
+		for(let i = 0; i < fromStorage[j].parents.length; i++) {
+			obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
+		}
+		for(let i = 0; i < fromStorage[j].children.length; i++) {
+			obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
+		}
+		obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
+	}
+	Sbls.render();
+}
+function loadText(TEXT) {
+	Sbls.instances = [];
+	let fromStorage = JSON.parse(TEXT);
+	for(let i = 0; i < fromStorage.length; i++) {
+		const obj1 = fromStorage[i];
+		Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
+	}
+	for(let j = 0; j < fromStorage.length; j++) {
+		const obj1 = Sbls.instances[j];
+		for(let i = 0; i < fromStorage[j].parents.length; i++) {
+			obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
+		}
+		for(let i = 0; i < fromStorage[j].children.length; i++) {
+			obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
+		}
+		obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
+	}
+	Sbls.render();
+}
+
 window.oncontextmenu = function() {
 	return false;
 }
@@ -385,7 +449,7 @@ var Sbls = {
 	}, 
 	draw() {
 		stroke(255);
-		for(const obj1 of this.instancesRendered) {
+		for(const obj1 of Sbls.instancesRendered) {
 			for(const obj2 of obj1.parents) {
 				DrawZ.lineScaled(obj1.pos[0], obj1.pos[1], obj2.pos[0], obj2.pos[1]);
 			}
