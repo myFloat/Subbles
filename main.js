@@ -35,6 +35,7 @@ function mouseWheel() {
 	cameraMoved();
 }
 function cameraMoved() {
+	Sbls.quitEdit();
 	Sbls.render();
 }
 function singleTap() {
@@ -78,7 +79,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v8";
+	s = "v9";
 }
 
 
@@ -507,6 +508,7 @@ var Sbls = {
 		this.menu = forMenu;
 	}, 
 	editName(OBJ) {
+		this.quitEdit();
 		const target = OBJ;
 		this.input = createInput(target.name);
 		const inputEvent = function() {
