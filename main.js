@@ -10,10 +10,11 @@ let toStorage;
 function compile() { //RUNNING THIS puts the UI out of function permanently
     let content = [];
     for(const obj1 of Sbls.instances) {
-        const obj2 = content.push(Object.assign({}, obj1));
-	obj2.pos = Object.assign({}, obj1.pos);
-	obj2.gridPos = Object.assign({}, obj1.gridPos);
-	obj2.pickedUpPos = Object.assign({}, obj1.pickedUpPos);
+        const obj2 = Object.assign({}, obj1)
+        obj2.pos = Object.assign({}, obj1.pos);
+        obj2.gridPos = Object.assign({}, obj1.gridPos);
+        obj2.pickedUpPos = Object.assign({}, obj1.pickedUpPos);
+        content.push(obj2);
     }
     toStorage = content;
         for(let j = 0; j < Sbls.instances.length; j++) {
@@ -146,7 +147,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v11";
+	s = "v12";
 }
 
 
