@@ -11,9 +11,9 @@ function compile() { //RUNNING THIS puts the UI out of function permanently
     let content = [];
     for(const obj1 of Sbls.instances) {
         const obj2 = Object.assign({}, obj1)
-        obj2.pos = Object.assign({}, obj1.pos);
-        obj2.gridPos = Object.assign({}, obj1.gridPos);
-        obj2.pickedUpPos = Object.assign({}, obj1.pickedUpPos);
+        obj2.pos = obj1.pos.splice();
+        obj2.gridPos = obj1.gridPos.splice();
+        obj2.pickedUpPos = obj1.pickedUpPos.splice();
         content.push(obj2);
     }
     toStorage = content;
@@ -147,7 +147,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v12";
+	s = "v13";
 }
 
 
