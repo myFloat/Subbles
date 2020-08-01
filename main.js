@@ -11,14 +11,14 @@ function compile() { //RUNNING THIS puts the UI out of function permanently
     let content = [];
     for(const obj1 of Sbls.instances) {
         const obj2 = Object.assign({}, obj1)
-        obj2.pos = obj1.pos.splice();
-        obj2.gridPos = obj1.gridPos.splice();
-        obj2.pickedUpPos = obj1.pickedUpPos.splice();
         content.push(obj2);
     }
     toStorage = content;
-        for(let j = 0; j < Sbls.instances.length; j++) {
+    for(let j = 0; j < Sbls.instances.length; j++) {
         const obj1 = toStorage[j];
+        const obj2 = Sbls.instances[j];
+        obj1.parents = obj2.parents.splice();
+        obj1.children = obj2.children.splice();
         for(let i = 0; i < obj1.parents.length; i++) {
             obj1.parents[i] = Sbls.instances.indexOf(Sbls.instances[j].parents[i]);
         }
@@ -147,7 +147,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v13";
+	s = "v14";
 }
 
 
