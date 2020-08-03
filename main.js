@@ -6,8 +6,12 @@
 //	Button for touchscreen
 //General do for all children method (maybe)
 
+function compile() {
+	const string = "This function is no longer needed before saving."; 
+	print(string);
+}
 let toStorage;
-function compile() { //RUNNING THIS puts the UI out of function permanently
+function prepareSave() { //RUNNING THIS puts the UI out of function permanently
     let content = [];
     for(const obj1 of Sbls.instances) {
         const obj2 = Object.assign({}, obj1)
@@ -29,9 +33,11 @@ function compile() { //RUNNING THIS puts the UI out of function permanently
     }
 }
 function saveFile(NAME) {
+    prepareSave();
     localStorage.setItem(NAME, JSON.stringify(toStorage));
 }
 function saveText() {
+    prepareSave();
     return JSON.stringify(toStorage);
 }
 
