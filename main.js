@@ -19,10 +19,10 @@ function compile() { //RUNNING THIS puts the UI out of function permanently
         const obj2 = Sbls.instances[j];
         obj1.parents = obj2.parents.splice();
         obj1.children = obj2.children.splice();
-        for(let i = 0; i < obj1.parents.length; i++) {
+        for(let i = 0; i < obj2.parents.length; i++) {
             obj1.parents[i] = Sbls.instances.indexOf(Sbls.instances[j].parents[i]);
         }
-        for(let i = 0; i < obj1.children.length; i++) {
+        for(let i = 0; i < obj2.children.length; i++) {
             obj1.children[i] = Sbls.instances.indexOf(Sbls.instances[j].children[i]);
         }
         obj1.ancestor = Sbls.instances.indexOf(Sbls.instances[j].ancestor);
@@ -147,7 +147,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v14";
+	s = "v15";
 }
 
 
