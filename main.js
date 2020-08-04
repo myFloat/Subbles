@@ -560,7 +560,7 @@ var Sbls = {
 				this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
 			} else {
 				this.menuPos = DrawZ.invertScaled(OBJ[0], OBJ[1]);
-				const increment = PI *2/2;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
+				const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 				
 				//To add parentless bubble
 				const alt1 = function() {
@@ -594,6 +594,35 @@ var Sbls = {
 				}
 				theta += increment;
 				this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
+				
+				//To load
+				const alt3 = function() {
+					let name = "";
+					for(const obj1 of Sbls.instances) {
+						if (obj1.name === "LOAD") {
+							for(const obj2 of obj1.children) {
+								name = obj2.name;
+							}
+						}
+					}
+					if (name !== "") {
+						loadText(name);
+						Sbls.menuShift(forMenu);
+					} else {
+						const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+						const subble = Sbls.createSubble(vec[0], vec[1], 144, 'Create bubble named "LOAD" and add subble to it named with load-code');
+						Sbls.render();
+						Sbls.editName(subble);
+						Sbls.menuShift(forMenu);
+					}
+				}
+				const draw3 = function(POS) {
+					fill(0);
+					textSize(optionRadius *2);
+					text("📁", POS[0], POS[1] +optionRadius *0.6);
+				}
+				theta += increment;
+				this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
 			}
 			this.mouseForSelection = false;
 		} else {
