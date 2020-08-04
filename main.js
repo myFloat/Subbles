@@ -579,7 +579,7 @@ var Sbls = {
 				this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
 				
 				//To save
-				const alt1 = function() {
+				const alt2 = function() {
 					const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
 					const string = saveText();
 					const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, string);
@@ -587,13 +587,13 @@ var Sbls = {
 					Sbls.editName(subble);
 					Sbls.menuShift(forMenu);
 				}
-				const draw1 = function(POS) {
+				const draw2 = function(POS) {
 					fill(0);
 					textSize(optionRadius *2);
 					text("💾", POS[0], POS[1] +optionRadius *0.6);
 				}
 				theta += increment;
-				this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
+				this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
 			}
 			this.mouseForSelection = false;
 		} else {
