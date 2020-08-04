@@ -128,7 +128,7 @@ function singleTap() {
 		}
 	}
 	if (Sbls.menu !== null && mouseButton !== RIGHT) {
-		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
+		const vec = DrawZ.vectorScaled(Sbls.menuPos);
 		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
 	}
 }
@@ -197,7 +197,7 @@ function cursorReleased() {
 	DrawZ.touchEnded();
 	Sbls.collisionOther();
 	if (Sbls.menu !== null && DrawZ.isTouchscreen && touches.length === 0) {
-		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
+		const vec = DrawZ.vectorScaled(Sbls.menuPos);
 		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
 	}
 }
@@ -341,6 +341,7 @@ var Sbls = {
 	input: null, 
 	//Menu
 	menu: null, 
+	menuPos: [0, 0], 
 	alternatives: [], 
 
 	createSubble(X, Y, R, NAME, PARENTS, GENERATION) {
@@ -459,7 +460,7 @@ var Sbls = {
 	}, 
 	draw() {
 		stroke(255);
-		for(const obj1 of Sbls.instancesRendered) {
+		for(const obj1 of this.instancesRendered) {
 			for(const obj2 of obj1.parents) {
 				DrawZ.lineScaled(obj1.pos[0], obj1.pos[1], obj2.pos[0], obj2.pos[1]);
 			}
@@ -479,7 +480,7 @@ var Sbls = {
 			DrawZ.textScaled(obj1.name, obj1.pos[0] -obj1.radius *0, obj1.pos[1], obj1.radius /2);
 		}
 		if (this.menu !== null) {
-			const vec = DrawZ.vectorScaled(this.menu.pos);
+			const vec = DrawZ.vectorScaled(this.menuPos);
 			const l = this.alternatives.length;
 			const selectedIndex = this.circleIndex(l, vec);
 			for(let i = 0; i < l; i++) {
@@ -507,6 +508,7 @@ var Sbls = {
 		let forMenu = null;
 		if (this.menu === null) {
 			forMenu = OBJ;
+			this.menuPos = OBJ.pos;
 			this.alternatives = [];
 			const optionRadius = height /24;
 			const circleRadius = height /6;
@@ -557,6 +559,7 @@ var Sbls = {
 				theta += increment;
 				this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
 			} else {
+				this.menuPos = OBJ;
 				const increment = PI *2/1;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 				
 				//To add parentless bubble
@@ -578,6 +581,7 @@ var Sbls = {
 			this.mouseForSelection = false;
 		} else {
 			this.mouseForSelection = true;
+			this.menuPos([0, 0]);
 		}
 		this.menu = forMenu;
 	}, 
