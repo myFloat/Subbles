@@ -153,7 +153,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v15";
+	s = "v16";
 }
 
 
@@ -581,7 +581,7 @@ var Sbls = {
 			this.mouseForSelection = false;
 		} else {
 			this.mouseForSelection = true;
-			this.menuPos([0, 0]);
+			this.menuPos = [0, 0];
 		}
 		this.menu = forMenu;
 	}, 
