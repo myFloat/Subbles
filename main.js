@@ -153,7 +153,7 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v16";
+	s = "v17";
 }
 
 
@@ -508,12 +508,12 @@ var Sbls = {
 		let forMenu = null;
 		if (this.menu === null) {
 			forMenu = OBJ;
-			this.menuPos = OBJ.pos;
 			this.alternatives = [];
 			const optionRadius = height /24;
 			const circleRadius = height /6;
 			let theta = PI /2;
 			if (OBJ.length === undefined) {
+				this.menuPos = OBJ.pos;
 				const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 				
 				//To add subble to bubble
@@ -559,13 +559,13 @@ var Sbls = {
 				theta += increment;
 				this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
 			} else {
-				this.menuPos = OBJ;
-				const increment = PI *2/1;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
+				this.menuPos = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+				const increment = PI *2/2;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 				
 				//To add parentless bubble
 				const alt1 = function() {
 					const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
-					const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New");
+					const subble = Sbls.createSubble(vec[0], vec[1], 144, "New");
 					Sbls.render();
 					Sbls.editName(subble);
 					Sbls.menuShift(forMenu);
@@ -574,6 +574,23 @@ var Sbls = {
 					fill(0);
 					textSize(optionRadius *2);
 					text("+", POS[0], POS[1] +optionRadius *0.6);
+				}
+				theta += increment;
+				this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
+				
+				//To save
+				const alt1 = function() {
+					const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+					const string = saveText();
+					const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, string);
+					Sbls.render();
+					Sbls.editName(subble);
+					Sbls.menuShift(forMenu);
+				}
+				const draw1 = function(POS) {
+					fill(0);
+					textSize(optionRadius *2);
+					text("💾", POS[0], POS[1] +optionRadius *0.6);
 				}
 				theta += increment;
 				this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
