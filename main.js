@@ -151,11 +151,15 @@ function setup() {
 	DrawZ.setup();
 	DrawZ.zoomOnPoint = true;
 
-	Sbls.createSubble(0, 0, 144);
 	//Subbles
-	Sbls.render();
-  
-	s = "v17";
+	if (localStorage.saved_mindmap !== undefined) {
+		loadFile("saved_mindmap");
+	} else {
+		Sbls.createSubble(0, 0, 144, "Mindmap");
+		Sbls.render();
+	}
+	
+	s = "Version 0";
 }
 
 
@@ -339,7 +343,7 @@ var Sbls = {
 	travelers: [], 
 	mouseForSelection: true, 
 	generationGap: 1/2, //Size proportion from each subble to its child
-	parentMaxGap: 999, //Max allowed distance to parents in local coordinates
+	parentMaxGap: 9999, //Max allowed distance to parents in local coordinates
 	input: null, 
 	//Menu
 	menu: null, 
@@ -562,6 +566,9 @@ var Sbls = {
 					theta += increment;
 					this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
 				} else {
+					saveFile("saved_mindmap");
+					s = "Saved!"
+					
 					this.menuPos = DrawZ.invertScaled(OBJ[0], OBJ[1]);
 					const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 
@@ -631,6 +638,7 @@ var Sbls = {
 			} else {
 				this.mouseForSelection = true;
 				this.menuPos = [0, 0];
+				s = "";
 			}
 			this.menu = forMenu;
 		}
@@ -674,7 +682,8 @@ function draw() {
 	
 	background(0);
 	Sbls.draw();
-	textSize(12);
+	let size = height *0.03;
+	textSize(size);
 	fill(255);
-	text(str("") +" " +str(str(s)), 400, 400);
+	text(str("") +" " +str(str(s)), size *4, size *2);
 }
