@@ -6,58 +6,131 @@
 //	Button for touchscreen
 //General do for all children method (maybe)
 
+function compile() {
+	const string = "This function is no longer needed before saving."; 
+	print(string);
+}
+let toStorage;
+function prepareSave() { //RUNNING THIS puts the UI out of function permanently
+    let content = [];
+    for(const obj1 of Sbls.instances) {
+        const obj2 = Object.assign({}, obj1)
+        content.push(obj2);
+    }
+    toStorage = content;
+    for(let j = 0; j < Sbls.instances.length; j++) {
+        const obj1 = toStorage[j];
+        const obj2 = Sbls.instances[j];
+        obj1.parents = obj2.parents.splice();
+        obj1.children = obj2.children.splice();
+        for(let i = 0; i < obj2.parents.length; i++) {
+            obj1.parents[i] = Sbls.instances.indexOf(Sbls.instances[j].parents[i]);
+        }
+        for(let i = 0; i < obj2.children.length; i++) {
+            obj1.children[i] = Sbls.instances.indexOf(Sbls.instances[j].children[i]);
+        }
+        obj1.ancestor = Sbls.instances.indexOf(Sbls.instances[j].ancestor);
+    }
+}
+function saveFile(NAME) {
+    prepareSave();
+    localStorage.setItem(NAME, JSON.stringify(toStorage));
+}
+function saveText() {
+    prepareSave();
+    return JSON.stringify(toStorage);
+}
+
+function loadFile(NAME) {
+	Sbls.instances = [];
+	let fromStorage = JSON.parse(localStorage.getItem(NAME));
+	for(let i = 0; i < fromStorage.length; i++) {
+		const obj1 = fromStorage[i];
+		Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
+	}
+	for(let j = 0; j < fromStorage.length; j++) {
+		const obj1 = Sbls.instances[j];
+		for(let i = 0; i < fromStorage[j].parents.length; i++) {
+			obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
+		}
+		for(let i = 0; i < fromStorage[j].children.length; i++) {
+			obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
+		}
+		obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
+	}
+	Sbls.render();
+}
+function loadText(TEXT) {
+	Sbls.instances = [];
+	let fromStorage = JSON.parse(TEXT);
+	for(let i = 0; i < fromStorage.length; i++) {
+		const obj1 = fromStorage[i];
+		Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
+	}
+	for(let j = 0; j < fromStorage.length; j++) {
+		const obj1 = Sbls.instances[j];
+		for(let i = 0; i < fromStorage[j].parents.length; i++) {
+			obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
+		}
+		for(let i = 0; i < fromStorage[j].children.length; i++) {
+			obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
+		}
+		obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
+	}
+	Sbls.render();
+}
+
 window.oncontextmenu = function() {
-	return false;
+	if (Sbls.input === null) {
+		return false;
+	}
 }
 function mouseDragged() {
-	dragged();
+	cursorDragged();
 	DrawZ.mouseDragged();
 }
 function touchMoved() {
-	dragged();
+	cursorDragged();
 	DrawZ.touchMoved();
 	return false;
 }
+function mousePressed() {
+	cursorPressed();
+}
 function touchStarted() {
-	DrawZ.touchStarted();
-	DrawZ.mouseForCamera = false;
-	Sbls.collisionMouse();
-	if (touches.length === 3) {
-		if (clickedObject !== null) {
-			Sbls.menuShift(clickedObject);
-		}
-	}
+	cursorPressed();
+}
+function mouseReleased() {
+	cursorReleased();
 }
 function touchEnded() {
-	DrawZ.touchEnded();
-	Sbls.collisionOther();
-	if (Sbls.menu !== null && DrawZ.isTouchscreen && touches.length === 0) {
-		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
-		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
-	}
+	cursorReleased();
 }
 function mouseWheel() {
 	DrawZ.mouseWheel(event);
 	cameraMoved();
 }
 function cameraMoved() {
+	Sbls.quitEdit();
 	Sbls.render();
 }
 function singleTap() {
-	if (clickedObject !== null) {
+	if (clickedObject === null) {
+		if (!DrawZ.isTouchScreen && mouseButton === RIGHT) {
+			Sbls.menuShift([mouseX, mouseY]);
+		}
+	} else {
 		if (DrawZ.isTouchscreen || mouseButton === LEFT) {
 			if (Sbls.mouseForSelection) {
 				clickedObject.selectShift();
 				clickedObject = null;
 			}
-		} else { //Does else mean nor?
+		} else {
 			Sbls.menuShift(clickedObject);
 		}
-	} else { //Not used. Note: triggered if clickedObject is set to null in previous block
-		
 	}
 	if (Sbls.menu !== null && mouseButton !== RIGHT) {
-		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
+		const vec = DrawZ.vectorScaled(Sbls.menuPos);
 		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
 	}
 }
@@ -82,15 +155,58 @@ function setup() {
 	//Subbles
 	Sbls.render();
   
-	s = "v4";
+	s = "v17";
 }
 
 
+function cursorDragged() {
+	if (clickedObject !== null && Sbls.mouseForSelection) {
+		if (DrawZ.isTouchscreen || mouseButton === LEFT) {
+			if (touches.length < 2) {
+				let obj1 = clickedObject;
+				let mousePos = DrawZ.invertScaled(mouseX, mouseY);
+				if (0 <= mouseX && mouseX <= width) {
+					const deltaX = -obj1.pos[0] +mousePos[0] +clickOffset[0];
+					Sbls.moveTravelers(deltaX, 0);
+				}
+				if (0 <= mouseY && mouseY <= height) {
+					const deltaY = -obj1.pos[1] +mousePos[1] +clickOffset[1];
+					Sbls.moveTravelers(0, deltaY);
+				}
+			}
+		} else {
+			DrawZ.mouseForCamera = true;
+		}
+	} else {
+		if (mouseButton === RIGHT) {
+			DrawZ.mouseForCamera = true;
+		}
+	}
+}
+function cursorPressed() {
+	DrawZ.touchStarted();
+	DrawZ.mouseForCamera = false;
+	Sbls.collisionMouse();
+	if (touches.length === 3) {
+		if (clickedObject !== null) {
+			Sbls.menuShift(clickedObject);
+		} else {
+			Sbls.menuShift([touches[0].x, touches[0].y]);
+		}
+	}
+}
+function cursorReleased() {
+	DrawZ.touchEnded();
+	Sbls.collisionOther();
+	if (Sbls.menu !== null && DrawZ.isTouchscreen && touches.length === 0) {
+		const vec = DrawZ.vectorScaled(Sbls.menuPos);
+		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
+	}
+}
 class Subble {
 	constructor(X, Y, R, NAME, PARENTS, GENERATION) {
 		this.pos = [X, Y];
-		//edit
-		this.gridPos = [X, Y];
+		this.gridPos = [X, Y]; //a.k.a. local coordinates
 		if (NAME === undefined) {
 			NAME = char(65 +floor(random(25)));
 			for(let i = 0; i < 4; i++) {
@@ -122,25 +238,44 @@ class Subble {
 		} else {
 			this.ancestor = this;
 		}
+		this.gridAlign([this]);
 	}
 	decideTravelers(BOOL) {
-		for(const obj1 of this.children) {
-			if (obj1.selected === BOOL) {
-				Sbls.travelers.push(obj1);
+		Sbls.travelers = [];
+		const f = function(CHILD, PARENT) {
+			if (CHILD.selected === BOOL) {
+				Sbls.travelers.push(CHILD);
 			}
-			obj1.decideTravelers(BOOL);
 		}
+		f(this);
+		this.forOffspring(f);
 	}
-	gridAlign() {
-		let parentPos = [0, 0];
+	gridAlign(TRAVELERS) {
+		let newPos;
 		if (this.parents.length > 0) {
-			parentPos = this.parents[0].pos;
+			const parentPos = this.parents[0].pos;
+			const delta = math.subtract(this.pos, parentPos);
+			const genScalar = pow(1 /Sbls.generationGap, this.parents[0].generation +1);
+			this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
+			if (max(abs(this.gridPos[0]), abs(this.gridPos[1])) > Sbls.parentMaxGap) { //If any coordinate is beyond limit
+				if (this.gridPos[0] < -Sbls.parentMaxGap) {
+					this.gridPos[0] = -Sbls.parentMaxGap;
+				} else if (this.gridPos[0] > Sbls.parentMaxGap) {
+					this.gridPos[0] = Sbls.parentMaxGap;
+				}
+				if (this.gridPos[1] < -Sbls.parentMaxGap) {
+					this.gridPos[1] = -Sbls.parentMaxGap;
+				} else if (this.gridPos[1] > Sbls.parentMaxGap) {
+					this.gridPos[1] = Sbls.parentMaxGap;
+				}
+			}
+			newPos = math.add(math.divide(this.gridPos, genScalar), parentPos);
+		} else {
+			this.gridPos = [round(this.pos[0]), round(this.pos[1])];
+			newPos = this.gridPos;
 		}
-		const delta = math.subtract(this.pos, parentPos);
-		const genScalar = pow(1 /Sbls.generationGap, this.generation);
-		this.gridPos = [round(delta[0] *genScalar), round(delta[1] *genScalar)];
-		const newPos = math.add(math.divide(this.gridPos, genScalar), parentPos);
 		const correction = math.subtract(newPos, this.pos);
+		Sbls.travelers = TRAVELERS.slice();
 		Sbls.moveTravelers(correction[0], correction[1]);
 	}
 	adopt(CHILD) {
@@ -204,9 +339,11 @@ var Sbls = {
 	travelers: [], 
 	mouseForSelection: true, 
 	generationGap: 1/2, //Size proportion from each subble to its child
+	parentMaxGap: 999, //Max allowed distance to parents in local coordinates
 	input: null, 
 	//Menu
 	menu: null, 
+	menuPos: [0, 0], 
 	alternatives: [], 
 
 	createSubble(X, Y, R, NAME, PARENTS, GENERATION) {
@@ -268,21 +405,12 @@ var Sbls = {
 					const mousePos = DrawZ.invertScaled(mouseX, mouseY);
 					clickOffset = [-mousePos[0] +obj1.pos[0], -mousePos[1] +obj1.pos[1]];
 					obj1.pickedUpPos = obj1.pos.slice();
-					this.travelers = [];
 					if (obj1.selected) {
+						this.travelers = [];
 						for(const obj2 of this.instancesSelected) {
-							obj2.decideTravelers(obj2.selected);
-						}
-						for(const obj2 of this.instancesSelected) {
-							let index = this.travelers.indexOf(obj2);
-							while(index !== -1) {
-								this.travelers.splice(index, 1);
-								index = this.travelers.indexOf(obj2);
-							}
 							this.travelers.push(obj2);
 						}
 					} else {
-						Sbls.travelers.push(obj1);
 						obj1.decideTravelers(obj1.selected);
 					}
 				}
@@ -290,13 +418,18 @@ var Sbls = {
 		}
 	}, 
 	collisionOther() {
-		if (clickedObject !== null) {
+		if (this.input !== null) {
+			if (this.input.elt !== document.activeElement) {
+				this.quitEdit();
+			}
+		}
+		if (clickedObject !== null && (mouseButton === LEFT || DrawZ.isTouchscreen) && Sbls.mouseForSelection) {
 			const obj1 = clickedObject;
 			let parent = false;
 			for(const obj2 of this.instancesRendered) {
 				if (obj2 !== obj1) {
 					if (sq(-obj1.pos[0] +obj2.pos[0]) +sq(-obj1.pos[1] +obj2.pos[1]) < sq(obj2.radius)) {
- 						if (obj2.children.indexOf(obj1) === -1) {
+						if (obj2.children.indexOf(obj1) === -1) {
 							parent = [obj2, false];
 						} else {
 							parent = [obj2, true];
@@ -321,14 +454,9 @@ var Sbls = {
 						oldest = obj2;
 					}
 				}
-				oldest.gridAlign();
+				oldest.gridAlign(Sbls.travelers);
 			} else {
-				obj1.gridAlign();
-			}
-		}
-		if (this.input !== null) {
-			if (this.input.elt !== document.activeElement) {
-				this.quitEdit();
+				obj1.gridAlign(Sbls.travelers);
 			}
 		}
 	}, 
@@ -350,11 +478,11 @@ var Sbls = {
 			}
 			fill(obj1.color);
 			DrawZ.ellipseScaled(obj1.pos[0], obj1.pos[1], obj1.radius *2);
-			fill(0);
+			fill(255);
 			DrawZ.textScaled(obj1.name, obj1.pos[0] -obj1.radius *0, obj1.pos[1], obj1.radius /2);
 		}
 		if (this.menu !== null) {
-			const vec = DrawZ.vectorScaled(this.menu.pos);
+			const vec = DrawZ.vectorScaled(this.menuPos);
 			const l = this.alternatives.length;
 			const selectedIndex = this.circleIndex(l, vec);
 			for(let i = 0; i < l; i++) {
@@ -379,66 +507,138 @@ var Sbls = {
 		}
 	}, 
 	menuShift(OBJ) {
-		let forMenu = null;
-		if (this.menu === null) {
-			s = OBJ.generation;
-			forMenu = OBJ;
-			this.alternatives = [];
-			const optionRadius = height /24;
-			const circleRadius = height /6;
-			const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
-			let theta = PI /2;
-			
-			//To add subble
-			const alt1 = function() {
-				const vec = DrawZ.invertScaled(mouseX, mouseY);
-				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
-				Sbls.render();
-				Sbls.editName(subble);
-				Sbls.menuShift(forMenu); //Something was to be done around here
-			}
-			const draw1 = function(POS) {
-				fill(0);
-				textSize(optionRadius *2);
-				text("+", POS[0], POS[1] +optionRadius *0.6);
-			}
-			theta += increment;
-			this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
-			
-			//To edit name
-			const alt2 = function() {
-				Sbls.editName(forMenu);
-				Sbls.menuShift(forMenu);
-			}
-			const draw2 = function(POS) {
-				textSize(optionRadius /2);
-				fill(0);
-				text('"' +forMenu.name +'"', POS[0], POS[1] +optionRadius *0.1);
-			}
-			theta += increment;
-			this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
-			
-			//To remove bubble
-			const alt3 = function() {
-				Sbls.menuShift(forMenu);
-				Sbls.removeSubble(forMenu);
-				Sbls.render();
-			}
-			const draw3 = function(POS) {
-				fill(0);
-				textSize(optionRadius *2);
-				text("🗑", POS[0], POS[1] +optionRadius *0.6);
-			}
-			theta += increment;
-			this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+		if (this.input === null) {
+			let forMenu = null;
+			if (this.menu === null) {
+				forMenu = OBJ;
+				this.alternatives = [];
+				const optionRadius = height /24;
+				const circleRadius = height /6;
+				let theta = PI /2;
+				if (OBJ.length === undefined) {
+					this.menuPos = OBJ.pos;
+					const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 
-			this.mouseForSelection = false;
-		} else {
-			this.mouseForSelection = true;
+					//To add subble to bubble
+					const alt1 = function() {
+						const vec = DrawZ.invertScaled(mouseX, mouseY);
+						const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
+						Sbls.render();
+						Sbls.menuShift(forMenu); //This has to come before next line
+						Sbls.editName(subble);
+					}
+					const draw1 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("+", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
+
+					//To edit name
+					const alt2 = function() {
+						Sbls.menuShift(forMenu); //This has to come before next line
+						Sbls.editName(forMenu);
+					}
+					const draw2 = function(POS) {
+						textSize(optionRadius /2);
+						fill(0);
+						text('"' +forMenu.name +'"', POS[0], POS[1] +optionRadius *0.1);
+					}
+					theta += increment;
+					this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
+
+					//To remove bubble
+					const alt3 = function() {
+						Sbls.menuShift(forMenu);
+						Sbls.removeSubble(forMenu);
+						Sbls.render();
+					}
+					const draw3 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("🗑", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+				} else {
+					this.menuPos = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+					const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
+
+					//To add parentless bubble
+					const alt1 = function() {
+						const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+						const subble = Sbls.createSubble(vec[0], vec[1], 144, "New");
+						Sbls.render();
+						Sbls.menuShift(forMenu); //This has to come before next line
+						Sbls.editName(subble);
+					}
+					const draw1 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("+", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
+
+					//To save
+					const alt2 = function() {
+						const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+						const string = saveText();
+						const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, string);
+						Sbls.render();
+						Sbls.menuShift(forMenu); //This has to come before next line
+						Sbls.editName(subble);
+					}
+					const draw2 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("💾", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
+
+					//To load
+					const alt3 = function() {
+						let name = "";
+						for(const obj1 of Sbls.instances) {
+							if (obj1.name === "LOAD") {
+								for(const obj2 of obj1.children) {
+									name = obj2.name;
+								}
+							}
+						}
+						if (name !== "") {
+							loadText(name);
+							Sbls.menuShift(forMenu);
+						} else {
+							const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+							const subble = Sbls.createSubble(vec[0], vec[1], 144, 'Create bubble named "LOAD" and add subble to it named with load-code');
+							Sbls.render();
+							Sbls.menuShift(forMenu); //This has to come before next line
+							Sbls.editName(subble);
+						}
+					}
+					const draw3 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("📁", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+				}
+				this.mouseForSelection = false;
+			} else {
+				this.mouseForSelection = true;
+				this.menuPos = [0, 0];
+			}
+			this.menu = forMenu;
 		}
-		this.menu = forMenu;
 	}, 
 	editName(OBJ) {
+		this.quitEdit();
+		Sbls.mouseForSelection = false;
+		Sbls.mouseForCamera = false;
 		const target = OBJ;
 		this.input = createInput(target.name);
 		const inputEvent = function() {
@@ -462,33 +662,11 @@ var Sbls = {
 		if (this.input !== null) {
 			this.input.remove();
 			this.input = null;
+			Sbls.mouseForSelection = true;
+			Sbls.mouseForCamera = true;
 		}
 	}, 
 	Subble
-}
-function dragged() {
-	if (clickedObject !== null && Sbls.mouseForSelection) {
-		if (DrawZ.isTouchscreen || mouseButton === LEFT) {
-			if (touches.length < 2) {
-				let obj1 = clickedObject;
-				let mousePos = DrawZ.invertScaled(mouseX, mouseY);
-				if (0 <= mouseX && mouseX <= width) {
-					const deltaX = -obj1.pos[0] +mousePos[0] +clickOffset[0];
-					Sbls.moveTravelers(deltaX, 0);
-				}
-				if (0 <= mouseY && mouseY <= height) {
-					const deltaY = -obj1.pos[1] +mousePos[1] +clickOffset[1];
-					Sbls.moveTravelers(0, deltaY);
-				}
-			}
-		} else {
-			DrawZ.mouseForCamera = true;
-		}
-	} else {
-		if (mouseButton === RIGHT) {
-			DrawZ.mouseForCamera = true;
-		}
-	}
 }
 
 function draw() {
@@ -498,5 +676,5 @@ function draw() {
 	Sbls.draw();
 	textSize(12);
 	fill(255);
-	text(str(DrawZ.isTouchscreen) +" " +str(str(s)), 400, 400);
+	text(str("") +" " +str(str(s)), 400, 400);
 }
