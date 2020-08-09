@@ -11,7 +11,7 @@ function compile() {
 	print(string);
 }
 let toStorage;
-function prepareSave() { //RUNNING THIS puts the UI out of function permanently
+function prepareSave() {
     let content = [];
     for(const obj1 of Sbls.instances) {
         const obj2 = Object.assign({}, obj1)
