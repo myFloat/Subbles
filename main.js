@@ -665,6 +665,7 @@ var Sbls = {
 		this.input.size(size *2);
 		this.input.position(vec[0] -size, vec[1] -size /5);
 		this.input.elt.focus();
+		this.input.elt.select();
 	}, 
 	quitEdit() {
 		if (this.input !== null) {
