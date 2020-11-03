@@ -6,8 +6,84 @@
 //	Button for touchscreen
 //General do for all children method (maybe)
 
+function compile() {
+	const string = "This function is no longer needed before saving."; 
+	print(string);
+}
+let toStorage;
+function prepareSave() {
+    let content = [];
+    for(const obj1 of Sbls.instances) {
+        const obj2 = Object.assign({}, obj1)
+        content.push(obj2);
+    }
+    toStorage = content;
+    for(let j = 0; j < Sbls.instances.length; j++) {
+        const obj1 = toStorage[j];
+        const obj2 = Sbls.instances[j];
+        obj1.parents = obj2.parents.splice();
+        obj1.children = obj2.children.splice();
+        for(let i = 0; i < obj2.parents.length; i++) {
+            obj1.parents[i] = Sbls.instances.indexOf(Sbls.instances[j].parents[i]);
+        }
+        for(let i = 0; i < obj2.children.length; i++) {
+            obj1.children[i] = Sbls.instances.indexOf(Sbls.instances[j].children[i]);
+        }
+        obj1.ancestor = Sbls.instances.indexOf(Sbls.instances[j].ancestor);
+    }
+}
+function saveFile(NAME) {
+    prepareSave();
+    localStorage.setItem(NAME, JSON.stringify(toStorage));
+}
+function saveText() {
+    prepareSave();
+    return JSON.stringify(toStorage);
+}
+
+function loadFile(NAME) {
+	Sbls.instances = [];
+	let fromStorage = JSON.parse(localStorage.getItem(NAME));
+	for(let i = 0; i < fromStorage.length; i++) {
+		const obj1 = fromStorage[i];
+		Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
+	}
+	for(let j = 0; j < fromStorage.length; j++) {
+		const obj1 = Sbls.instances[j];
+		for(let i = 0; i < fromStorage[j].parents.length; i++) {
+			obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
+		}
+		for(let i = 0; i < fromStorage[j].children.length; i++) {
+			obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
+		}
+		obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
+	}
+	Sbls.render();
+}
+function loadText(TEXT) {
+	Sbls.instances = [];
+	let fromStorage = JSON.parse(TEXT);
+	for(let i = 0; i < fromStorage.length; i++) {
+		const obj1 = fromStorage[i];
+		Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
+	}
+	for(let j = 0; j < fromStorage.length; j++) {
+		const obj1 = Sbls.instances[j];
+		for(let i = 0; i < fromStorage[j].parents.length; i++) {
+			obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
+		}
+		for(let i = 0; i < fromStorage[j].children.length; i++) {
+			obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
+		}
+		obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
+	}
+	Sbls.render();
+}
+
 window.oncontextmenu = function() {
-	return false;
+	if (Sbls.input === null) {
+		return false;
+	}
 }
 function mouseDragged() {
 	cursorDragged();
@@ -35,23 +111,26 @@ function mouseWheel() {
 	cameraMoved();
 }
 function cameraMoved() {
+	Sbls.quitEdit();
 	Sbls.render();
 }
 function singleTap() {
-	if (clickedObject !== null) {
+	if (clickedObject === null) {
+		if (!DrawZ.isTouchScreen && mouseButton === RIGHT) {
+			Sbls.menuShift([mouseX, mouseY]);
+		}
+	} else {
 		if (DrawZ.isTouchscreen || mouseButton === LEFT) {
 			if (Sbls.mouseForSelection) {
 				clickedObject.selectShift();
 				clickedObject = null;
 			}
-		} else { //Does else mean nor?
+		} else {
 			Sbls.menuShift(clickedObject);
 		}
-	} else { //Not used. Note: triggered if clickedObject is set to null in previous block
-		
 	}
 	if (Sbls.menu !== null && mouseButton !== RIGHT) {
-		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
+		const vec = DrawZ.vectorScaled(Sbls.menuPos);
 		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
 	}
 }
@@ -72,11 +151,15 @@ function setup() {
 	DrawZ.setup();
 	DrawZ.zoomOnPoint = true;
 
-	Sbls.createSubble(0, 0, 144);
 	//Subbles
-	Sbls.render();
-  
-	s = "v8";
+	if (localStorage.saved_mindmap !== undefined) {
+		loadFile("saved_mindmap");
+	} else {
+		Sbls.createSubble(0, 0, 144, "Mindmap");
+		Sbls.render();
+	}
+	
+	s = "Version 0";
 }
 
 
@@ -111,6 +194,8 @@ function cursorPressed() {
 	if (touches.length === 3) {
 		if (clickedObject !== null) {
 			Sbls.menuShift(clickedObject);
+		} else {
+			Sbls.menuShift([touches[0].x, touches[0].y]);
 		}
 	}
 }
@@ -118,7 +203,7 @@ function cursorReleased() {
 	DrawZ.touchEnded();
 	Sbls.collisionOther();
 	if (Sbls.menu !== null && DrawZ.isTouchscreen && touches.length === 0) {
-		const vec = DrawZ.vectorScaled(Sbls.menu.pos);
+		const vec = DrawZ.vectorScaled(Sbls.menuPos);
 		Sbls.alternatives[Sbls.circleIndex(Sbls.alternatives.length, vec)][0]();
 	}
 }
@@ -258,10 +343,11 @@ var Sbls = {
 	travelers: [], 
 	mouseForSelection: true, 
 	generationGap: 1/2, //Size proportion from each subble to its child
-	parentMaxGap: 999, //Max allowed distance to parents in local coordinates
+	parentMaxGap: 9999, //Max allowed distance to parents in local coordinates
 	input: null, 
 	//Menu
 	menu: null, 
+	menuPos: [0, 0], 
 	alternatives: [], 
 
 	createSubble(X, Y, R, NAME, PARENTS, GENERATION) {
@@ -336,13 +422,18 @@ var Sbls = {
 		}
 	}, 
 	collisionOther() {
-		if (clickedObject !== null) {
+		if (this.input !== null) {
+			if (this.input.elt !== document.activeElement) {
+				this.quitEdit();
+			}
+		}
+		if (clickedObject !== null && (mouseButton === LEFT || DrawZ.isTouchscreen) && Sbls.mouseForSelection) {
 			const obj1 = clickedObject;
 			let parent = false;
 			for(const obj2 of this.instancesRendered) {
 				if (obj2 !== obj1) {
 					if (sq(-obj1.pos[0] +obj2.pos[0]) +sq(-obj1.pos[1] +obj2.pos[1]) < sq(obj2.radius)) {
- 						if (obj2.children.indexOf(obj1) === -1) {
+						if (obj2.children.indexOf(obj1) === -1) {
 							parent = [obj2, false];
 						} else {
 							parent = [obj2, true];
@@ -372,11 +463,6 @@ var Sbls = {
 				obj1.gridAlign(Sbls.travelers);
 			}
 		}
-		if (this.input !== null) {
-			if (this.input.elt !== document.activeElement) {
-				this.quitEdit();
-			}
-		}
 	}, 
 	draw() {
 		stroke(255);
@@ -400,7 +486,7 @@ var Sbls = {
 			DrawZ.textScaled(obj1.name, obj1.pos[0] -obj1.radius *0, obj1.pos[1], obj1.radius /2);
 		}
 		if (this.menu !== null) {
-			const vec = DrawZ.vectorScaled(this.menu.pos);
+			const vec = DrawZ.vectorScaled(this.menuPos);
 			const l = this.alternatives.length;
 			const selectedIndex = this.circleIndex(l, vec);
 			for(let i = 0; i < l; i++) {
@@ -425,66 +511,142 @@ var Sbls = {
 		}
 	}, 
 	menuShift(OBJ) {
-		let forMenu = null;
-		if (this.menu === null) {
-			s = OBJ.generation;
-			forMenu = OBJ;
-			this.alternatives = [];
-			const optionRadius = height /24;
-			const circleRadius = height /6;
-			const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
-			let theta = PI /2;
-			
-			//To add subble
-			const alt1 = function() {
-				const vec = DrawZ.invertScaled(mouseX, mouseY);
-				const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
-				Sbls.render();
-				Sbls.editName(subble);
-				Sbls.menuShift(forMenu); //Something was to be done around here
-			}
-			const draw1 = function(POS) {
-				fill(0);
-				textSize(optionRadius *2);
-				text("+", POS[0], POS[1] +optionRadius *0.6);
-			}
-			theta += increment;
-			this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
-			
-			//To edit name
-			const alt2 = function() {
-				Sbls.editName(forMenu);
-				Sbls.menuShift(forMenu);
-			}
-			const draw2 = function(POS) {
-				textSize(optionRadius /2);
-				fill(0);
-				text('"' +forMenu.name +'"', POS[0], POS[1] +optionRadius *0.1);
-			}
-			theta += increment;
-			this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
-			
-			//To remove bubble
-			const alt3 = function() {
-				Sbls.menuShift(forMenu);
-				Sbls.removeSubble(forMenu);
-				Sbls.render();
-			}
-			const draw3 = function(POS) {
-				fill(0);
-				textSize(optionRadius *2);
-				text("🗑", POS[0], POS[1] +optionRadius *0.6);
-			}
-			theta += increment;
-			this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+		if (this.input === null) {
+			let forMenu = null;
+			if (this.menu === null) {
+				forMenu = OBJ;
+				this.alternatives = [];
+				const optionRadius = height /24;
+				const circleRadius = height /6;
+				let theta = PI /2;
+				if (OBJ.length === undefined) {
+					this.menuPos = OBJ.pos;
+					const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 
-			this.mouseForSelection = false;
-		} else {
-			this.mouseForSelection = true;
+					//To add subble to bubble
+					const alt1 = function() {
+						const vec = DrawZ.invertScaled(mouseX, mouseY);
+						const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, "New", [forMenu], forMenu.generation +1);
+						Sbls.render();
+						Sbls.menuShift(forMenu); //This has to come before next line
+						Sbls.editName(subble);
+					}
+					const draw1 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("+", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
+
+					//To edit name
+					const alt2 = function() {
+						Sbls.menuShift(forMenu); //This has to come before next line
+						Sbls.editName(forMenu);
+					}
+					const draw2 = function(POS) {
+						textSize(optionRadius /2);
+						fill(0);
+						text('"' +forMenu.name +'"', POS[0], POS[1] +optionRadius *0.1);
+					}
+					theta += increment;
+					this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
+
+					//To remove bubble
+					const alt3 = function() {
+						Sbls.menuShift(forMenu);
+						Sbls.removeSubble(forMenu);
+						Sbls.render();
+					}
+					const draw3 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("🗑", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+				} else {
+					saveFile("saved_mindmap");
+					s = "Saved!"
+					
+					this.menuPos = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+					const increment = PI *2/3;	//Change this when adding alt-functions (or beautify this block of code so that you don't have to)
+
+					//To add parentless bubble
+					const alt1 = function() {
+						const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+						const subble = Sbls.createSubble(vec[0], vec[1], 144, "New");
+						Sbls.render();
+						Sbls.menuShift(forMenu); //This has to come before next line
+						Sbls.editName(subble);
+					}
+					const draw1 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("+", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt1, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw1]);
+
+					//To save
+					const alt2 = function() {
+						const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+						const string = saveText();
+						const subble = Sbls.createSubble(vec[0], vec[1], optionRadius /DrawZ.zoom, string);
+						Sbls.render();
+						Sbls.menuShift(forMenu); //This has to come before next line
+						Sbls.editName(subble);
+					}
+					const draw2 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("💾", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt2, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw2]);
+
+					//To load
+					const alt3 = function() {
+						let name = "";
+						for(const obj1 of Sbls.instances) {
+							if (obj1.name === "LOAD") {
+								for(const obj2 of obj1.children) {
+									name = obj2.name;
+								}
+							}
+						}
+						if (name !== "") {
+							loadText(name);
+							Sbls.menuShift(forMenu);
+						} else {
+							const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
+							const subble = Sbls.createSubble(vec[0], vec[1], 144, 'Create bubble named "LOAD" and add subble to it named with load-code');
+							Sbls.render();
+							Sbls.menuShift(forMenu); //This has to come before next line
+							Sbls.editName(subble);
+						}
+					}
+					const draw3 = function(POS) {
+						fill(0);
+						textSize(optionRadius *2);
+						text("📁", POS[0], POS[1] +optionRadius *0.6);
+					}
+					theta += increment;
+					this.alternatives.push([alt3, [cos(theta) *circleRadius, sin(theta) *circleRadius], optionRadius, draw3]);
+				}
+				this.mouseForSelection = false;
+			} else {
+				this.mouseForSelection = true;
+				this.menuPos = [0, 0];
+				s = "";
+			}
+			this.menu = forMenu;
 		}
-		this.menu = forMenu;
 	}, 
 	editName(OBJ) {
+		this.quitEdit();
+		Sbls.mouseForSelection = false;
+		Sbls.mouseForCamera = false;
 		const target = OBJ;
 		this.input = createInput(target.name);
 		const inputEvent = function() {
@@ -503,11 +665,14 @@ var Sbls = {
 		this.input.size(size *2);
 		this.input.position(vec[0] -size, vec[1] -size /5);
 		this.input.elt.focus();
+		this.input.elt.select();
 	}, 
 	quitEdit() {
 		if (this.input !== null) {
 			this.input.remove();
 			this.input = null;
+			Sbls.mouseForSelection = true;
+			Sbls.mouseForCamera = true;
 		}
 	}, 
 	Subble
@@ -518,7 +683,8 @@ function draw() {
 	
 	background(0);
 	Sbls.draw();
-	textSize(12);
+	let size = height *0.03;
+	textSize(size);
 	fill(255);
-	text(str(DrawZ.isTouchscreen) +" " +str(str(s)), 400, 400);
+	text(str("") +" " +str(str(s)), size *4, size *2);
 }
