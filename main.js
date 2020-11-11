@@ -171,11 +171,11 @@ function cursorDragged() {
 				let mousePos = DrawZ.invertScaled(mouseX, mouseY);
 				if (0 <= mouseX && mouseX <= width) {
 					const deltaX = -obj1.pos[0] +mousePos[0] +clickOffset[0];
-					Sbls.moveTravelers(deltaX, 0);
+					Sbls.moveTravelers(deltaX, 0, Sbls.travelers);
 				}
 				if (0 <= mouseY && mouseY <= height) {
 					const deltaY = -obj1.pos[1] +mousePos[1] +clickOffset[1];
-					Sbls.moveTravelers(0, deltaY);
+					Sbls.moveTravelers(0, deltaY, Sbls.travelers);
 				}
 			}
 		} else {
@@ -249,6 +249,8 @@ class Subble {
 		const f = function(CHILD, PARENT) {
 			if (CHILD.selected === BOOL) {
 				Sbls.travelers.push(CHILD);
+			} else {
+				Sbls.travelingDefiers.push(CHILD);
 			}
 		}
 		f(this);
@@ -279,8 +281,7 @@ class Subble {
 			newPos = this.gridPos;
 		}
 		const correction = math.subtract(newPos, this.pos);
-		Sbls.travelers = TRAVELERS.slice();
-		Sbls.moveTravelers(correction[0], correction[1]);
+		Sbls.moveTravelers(correction[0], correction[1], TRAVELERS);
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
@@ -341,6 +342,7 @@ var Sbls = {
 	instancesRendered: [], 
 	instancesSelected: [], 
 	travelers: [], 
+	travelingDefiers: [], 
 	mouseForSelection: true, 
 	generationGap: 1/2, //Size proportion from each subble to its child
 	parentMaxGap: 9999, //Max allowed distance to parents in local coordinates
@@ -357,7 +359,7 @@ var Sbls = {
 	removeSubble(INSTANCE) {
 		this.instances.splice(this.instances.indexOf(INSTANCE), 1);
 		const index = this.instancesRendered.indexOf(INSTANCE);
-		if (index != -1) {
+		if (index !== -1) {
 			this.instancesRendered.splice(index, 1);
 		}
 		if (INSTANCE.parents.length > 0) {
@@ -409,14 +411,7 @@ var Sbls = {
 					const mousePos = DrawZ.invertScaled(mouseX, mouseY);
 					clickOffset = [-mousePos[0] +obj1.pos[0], -mousePos[1] +obj1.pos[1]];
 					obj1.pickedUpPos = obj1.pos.slice();
-					if (obj1.selected) {
-						this.travelers = [];
-						for(const obj2 of this.instancesSelected) {
-							this.travelers.push(obj2);
-						}
-					} else {
-						obj1.decideTravelers(obj1.selected);
-					}
+					obj1.decideTravelers(obj1.selected);
 				}
 			}
 		}
@@ -449,20 +444,29 @@ var Sbls = {
 				}
 				const deltaX = -obj1.pos[0] +obj1.pickedUpPos[0];
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
-				this.moveTravelers(deltaX, deltaY);
+				this.moveTravelers(deltaX, deltaY, Sbls.travelers);
 			}
-			if (obj1.selected) {
-				let oldest = obj1;
-				for(const obj2 of Sbls.travelers) {
-					if (obj2.generation < oldest.generation) {
-						oldest = obj2;
+			let oldest = Sbls.lowestSubble(Sbls.travelers);
+			oldest.gridAlign(Sbls.travelers);
+			if (Sbls.travelingDefiers.length > 0) {
+				let defiersLeft = Sbls.travelingDefiers.slice();
+				for(let i = 0; defiersLeft.length > 0; i++) {
+					let oldest = Sbls.lowestSubble(defiersLeft);
+					let unlikeChildren = oldest.children.filter(item => ! Sbls.travelingDefiers.includes(item));
+					let likeChildren = oldest.children.filter(item => ! unlikeChildren.includes(item));
+					oldest.gridAlign([oldest, ...likeChildren]); //Set minus relevance
+					for(const obj2 of likeChildren) {
+						defiersLeft.splice(defiersLeft.indexOf(obj2), 1);
 					}
+					for(const obj2 of unlikeChildren) {
+						obj2.gridAlign([obj2, ...obj2.children]); //Set minus relevance
+					}
+					defiersLeft.splice(defiersLeft.indexOf(oldest), 1);
 				}
-				oldest.gridAlign(Sbls.travelers);
-			} else {
-				obj1.gridAlign(Sbls.travelers);
 			}
 		}
+		Sbls.travelers = [];
+		Sbls.travelingDefiers = [];
 	}, 
 	draw() {
 		stroke(255);
@@ -504,11 +508,20 @@ var Sbls = {
 	circleIndex(N, POINT) {
 		return floor(math.mod(-atan2(-POINT[0] +mouseX, -POINT[1] +mouseY) -PI /N, 2 *PI) /(2 *PI) *N);
 	}, 
-	moveTravelers(X, Y) {
-		for(const obj1 of this.travelers) {
+	moveTravelers(X, Y, TRAVELERS) {
+		for(const obj1 of TRAVELERS) {
 			obj1.pos[0] += X;
 			obj1.pos[1] += Y;
 		}
+	}, 
+	lowestSubble(SUBBLES) {
+		let oldest = SUBBLES[0];
+		for(const obj1 of SUBBLES) {
+			if (obj1.generation < oldest.generation) {
+				oldest = obj1;
+			}
+		}
+		return oldest;
 	}, 
 	menuShift(OBJ) {
 		if (this.input === null) {
@@ -638,7 +651,6 @@ var Sbls = {
 			} else {
 				this.mouseForSelection = true;
 				this.menuPos = [0, 0];
-				s = "";
 			}
 			this.menu = forMenu;
 		}
