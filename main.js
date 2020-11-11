@@ -452,13 +452,25 @@ var Sbls = {
 				let defiersLeft = Sbls.travelingDefiers.slice();
 				for(let i = 0; defiersLeft.length > 0; i++) {
 					let oldest = Sbls.lowestSubble(defiersLeft);
-					let unlikeChildren = oldest.children.filter(item => ! Sbls.travelingDefiers.includes(item));
-					let likeChildren = oldest.children.filter(item => ! unlikeChildren.includes(item));
-					oldest.gridAlign([oldest, ...likeChildren]); //Set minus relevance
-					for(const obj2 of likeChildren) {
+					let similarOffspring = [];
+					let differentOffspring = [];
+					const f = function(CHILD, PARENT) {
+						if (Sbls.travelingDefiers.includes(CHILD)) {
+							if (! similarOffspring.includes(CHILD)) {
+								similarOffspring.push(CHILD);
+							}
+						} else {
+							if (! differentOffspring.includes(CHILD)) {
+								differentOffspring.push(CHILD);
+							}
+						}
+					}
+					oldest.forOffspring(f);
+					oldest.gridAlign([oldest, ...similarOffspring]); //Set minus relevance
+					for(const obj2 of similarOffspring) {
 						defiersLeft.splice(defiersLeft.indexOf(obj2), 1);
 					}
-					for(const obj2 of unlikeChildren) {
+					for(const obj2 of differentOffspring) {
 						obj2.gridAlign([obj2, ...obj2.children]); //Set minus relevance
 					}
 					defiersLeft.splice(defiersLeft.indexOf(oldest), 1);
