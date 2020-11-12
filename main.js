@@ -448,7 +448,7 @@ var Sbls = {
 			}
 			let oldest = Sbls.lowestSubble(Sbls.travelers);
 			oldest.gridAlign(Sbls.travelers);
-			if (Sbls.travelingDefiers.length > 0) {
+			if (Sbls.travelingDefiers.length > 0 && Sbls.travelers.length > 0) {
 				let defiersLeft = Sbls.travelingDefiers.slice();
 				for(let i = 0; defiersLeft.length > 0; i++) {
 					let oldest = Sbls.lowestSubble(defiersLeft);
