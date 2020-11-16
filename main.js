@@ -245,7 +245,6 @@ class Subble {
 		this.gridAlign();
 	}
 	decideTravelers(SELECTED) {
-		Sbls.travelers.clear()
 		for (const node of this.subtree()) {
 			if (node.selected === SELECTED) {
 				Sbls.travelers.add(node);
@@ -344,16 +343,16 @@ class Subble {
 	selectShift() {
 		this.selected = !this.selected;
 		if (this.selected) {
-			Sbls.instancesSelected.push(this);
+			Sbls.instancesSelected.add(this);
 		} else {
-			Sbls.instancesSelected.splice(Sbls.instancesSelected.indexOf(this), 1);
+			Sbls.instancesSelected.delete(this);
 		}
 	}
 }
 var Sbls = {
 	instances: [], 
 	instancesRendered: [], 
-	instancesSelected: [], 
+	instancesSelected: new Set(), 
 	travelers: new Set(), 
 	mouseForSelection: true, 
 	generationGap: 1/2, //Size proportion from each subble to its child
@@ -423,7 +422,11 @@ var Sbls = {
 					const mousePos = DrawZ.invertScaled(mouseX, mouseY);
 					clickOffset = [-mousePos[0] +obj1.pos[0], -mousePos[1] +obj1.pos[1]];
 					obj1.pickedUpPos = obj1.pos.slice();
-					obj1.decideTravelers(obj1.selected);
+					if (obj1.selected) {
+						Sbls.travelers = new Set(Sbls.instancesSelected);
+					} else {
+						obj1.decideTravelers(obj1.selected);
+					}
 				}
 			}
 		}
@@ -458,7 +461,17 @@ var Sbls = {
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
 				this.moveTravelers(deltaX, deltaY, Sbls.travelers);
 			}
-			clickedObject.gridAlign();
+			if (obj1.selected) {
+				const ancestors = new Set();
+				for(const instance of Sbls.instancesSelected) {
+					if (! ancestors.has(instance.ancestor)) {
+						instance.ancestor.gridAlign();
+						ancestors.add(instance.ancestor);
+					}
+				}
+			} else {
+				clickedObject.gridAlign();
+			}
 		}
 		Sbls.travelers.clear()
 	}, 
