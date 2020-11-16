@@ -657,6 +657,7 @@ var Sbls = {
 				this.mouseForSelection = false;
 			} else {
 				this.mouseForSelection = true;
+				s = "";
 				this.menuPos = [0, 0];
 			}
 			this.menu = forMenu;
@@ -705,5 +706,5 @@ function draw() {
 	let size = height *0.03;
 	textSize(size);
 	fill(255);
-	text(str("") +" " +str(str(s)), size *4, size *2);
+	text(str(s), size *4, size *2);
 }
