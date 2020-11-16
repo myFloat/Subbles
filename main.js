@@ -242,21 +242,16 @@ class Subble {
 		} else {
 			this.ancestor = this;
 		}
-		this.gridAlign([this]);
+		this.gridAlign();
 	}
-	decideTravelers(BOOL) {
-		Sbls.travelers = [];
-		const f = function(CHILD) {
-			if (CHILD.selected === BOOL) {
-				Sbls.travelers.push(CHILD);
-			} else {
-				Sbls.travelingDefiers.add(CHILD);
+	decideTravelers(SELECTED) {
+		for (const node of this.subtree()) {
+			if (node.selected === SELECTED) {
+				Sbls.travelers.add(node);
 			}
 		}
-		f(this);
-		this.forOffspring(f);
 	}
-	gridAlign(TRAVELERS) {
+	gridAlign() {
 		let newPos;
 		if (this.parents.length > 0) {
 			const parentPos = this.parents[0].pos;
@@ -281,7 +276,19 @@ class Subble {
 			newPos = this.gridPos;
 		}
 		const correction = math.subtract(newPos, this.pos);
-		Sbls.moveTravelers(correction[0], correction[1], TRAVELERS);
+
+		const rootSelected = this.selected;
+		function *similarDescendants(PARENT) {
+			yield PARENT;
+			for (const child of PARENT.children) {
+				if (child.selected === rootSelected) {
+					yield *similarDescendants(child);
+				} else {
+					child.gridAlign();
+				}
+			}
+		}
+		Sbls.moveTravelers(correction[0], correction[1], similarDescendants(this));
 	}
 	adopt(CHILD) {
 		if (this.parents.indexOf(CHILD) === -1) {
@@ -317,9 +324,14 @@ class Subble {
 		this.forOffspring(f);
 	}
 	changeAncestor(ANCESTOR) {
-		this.ancestor = ANCESTOR;
-		for(const obj1 of this.children) {
-			obj1.changeAncestor(ANCESTOR);
+		for (const node of this.subtree()) {
+			node.ancestor = ANCESTOR;
+		}
+	}
+	*subtree() {
+		yield this;
+		for (const child of this.children) {
+			yield *child.subtree();
 		}
 	}
 	forOffspring(FUNCTION) { //Do for all children, grandchildren, a.s.f...
@@ -331,18 +343,17 @@ class Subble {
 	selectShift() {
 		this.selected = !this.selected;
 		if (this.selected) {
-			Sbls.instancesSelected.push(this);
+			Sbls.instancesSelected.add(this);
 		} else {
-			Sbls.instancesSelected.splice(Sbls.instancesSelected.indexOf(this), 1);
+			Sbls.instancesSelected.delete(this);
 		}
 	}
 }
 var Sbls = {
 	instances: [], 
 	instancesRendered: [], 
-	instancesSelected: [], 
-	travelers: [], 
-	travelingDefiers: new Set(), 
+	instancesSelected: new Set(), 
+	travelers: new Set(), 
 	mouseForSelection: true, 
 	generationGap: 1/2, //Size proportion from each subble to its child
 	parentMaxGap: 9999, //Max allowed distance to parents in local coordinates
@@ -411,7 +422,11 @@ var Sbls = {
 					const mousePos = DrawZ.invertScaled(mouseX, mouseY);
 					clickOffset = [-mousePos[0] +obj1.pos[0], -mousePos[1] +obj1.pos[1]];
 					obj1.pickedUpPos = obj1.pos.slice();
-					obj1.decideTravelers(obj1.selected);
+					if (obj1.selected) {
+						Sbls.travelers = new Set(Sbls.instancesSelected);
+					} else {
+						obj1.decideTravelers(obj1.selected);
+					}
 				}
 			}
 		}
@@ -446,26 +461,19 @@ var Sbls = {
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
 				this.moveTravelers(deltaX, deltaY, Sbls.travelers);
 			}
-			const oldest = Sbls.lowestSubble(Sbls.travelers);
-			oldest.gridAlign(Sbls.travelers);
-
-			if (Sbls.travelingDefiers.size > 0 && Sbls.travelers.length > 0) {
-				function *contiguousDescendants(PARENT, DEFIERS) {
-					yield PARENT;
-					for (const child of PARENT.children) {
-						if (Sbls.travelingDefiers.has(child) === DEFIERS) {
-							yield *contiguousDescendants(child, DEFIERS);
-						} else {
-							child.gridAlign(contiguousDescendants(child, !DEFIERS));
-						}
+			if (obj1.selected) {
+				const ancestors = new Set();
+				for(const instance of Sbls.instancesSelected) {
+					if (! ancestors.has(instance.ancestor)) {
+						instance.ancestor.gridAlign();
+						ancestors.add(instance.ancestor);
 					}
 				}
-				const oldestDefier = Sbls.lowestSubble(Sbls.travelingDefiers);
-				oldestDefier.gridAlign(contiguousDescendants(oldestDefier, true));
+			} else {
+				clickedObject.gridAlign();
 			}
 		}
-		Sbls.travelers = [];
-		Sbls.travelingDefiers = new Set();
+		Sbls.travelers.clear()
 	}, 
 	draw() {
 		stroke(255);
