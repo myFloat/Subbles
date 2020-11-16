@@ -246,11 +246,11 @@ class Subble {
 	}
 	decideTravelers(BOOL) {
 		Sbls.travelers = [];
-		const f = function(CHILD, PARENT) {
+		const f = function(CHILD) {
 			if (CHILD.selected === BOOL) {
 				Sbls.travelers.push(CHILD);
 			} else {
-				Sbls.travelingDefiers.push(CHILD);
+				Sbls.travelingDefiers.add(CHILD);
 			}
 		}
 		f(this);
@@ -342,7 +342,7 @@ var Sbls = {
 	instancesRendered: [], 
 	instancesSelected: [], 
 	travelers: [], 
-	travelingDefiers: [], 
+	travelingDefiers: new Set(), 
 	mouseForSelection: true, 
 	generationGap: 1/2, //Size proportion from each subble to its child
 	parentMaxGap: 9999, //Max allowed distance to parents in local coordinates
@@ -446,39 +446,26 @@ var Sbls = {
 				const deltaY = -obj1.pos[1] +obj1.pickedUpPos[1];
 				this.moveTravelers(deltaX, deltaY, Sbls.travelers);
 			}
-			let oldest = Sbls.lowestSubble(Sbls.travelers);
+			const oldest = Sbls.lowestSubble(Sbls.travelers);
 			oldest.gridAlign(Sbls.travelers);
-			if (Sbls.travelingDefiers.length > 0 && Sbls.travelers.length > 0) {
-				let defiersLeft = Sbls.travelingDefiers.slice();
-				for(let i = 0; defiersLeft.length > 0; i++) {
-					let oldest = Sbls.lowestSubble(defiersLeft);
-					let similarOffspring = [];
-					let differentOffspring = [];
-					const f = function(CHILD, PARENT) {
-						if (Sbls.travelingDefiers.includes(CHILD)) {
-							if (! similarOffspring.includes(CHILD)) {
-								similarOffspring.push(CHILD);
-							}
+
+			if (Sbls.travelingDefiers.size > 0 && Sbls.travelers.length > 0) {
+				function *contiguousDefiers(PARENT) {
+					yield PARENT;
+					for (const child of PARENT.children) {
+						if (Sbls.travelingDefiers.has(child)) {
+							yield *contiguousDefiers(child);
 						} else {
-							if (! differentOffspring.includes(CHILD)) {
-								differentOffspring.push(CHILD);
-							}
+							child.gridAlign(contiguousDefiers(child));
 						}
 					}
-					oldest.forOffspring(f);
-					oldest.gridAlign([oldest, ...similarOffspring]); //Set minus relevance
-					for(const obj2 of similarOffspring) {
-						defiersLeft.splice(defiersLeft.indexOf(obj2), 1);
-					}
-					for(const obj2 of differentOffspring) {
-						obj2.gridAlign([obj2, ...obj2.children]); //Set minus relevance
-					}
-					defiersLeft.splice(defiersLeft.indexOf(oldest), 1);
 				}
+				const oldestDefier = Sbls.lowestSubble(Sbls.travelingDefiers);
+				oldestDefier.gridAlign(contiguousDefiers(oldestDefier));
 			}
 		}
 		Sbls.travelers = [];
-		Sbls.travelingDefiers = [];
+		Sbls.travelingDefiers = new Set();
 	}, 
 	draw() {
 		stroke(255);
@@ -527,9 +514,9 @@ var Sbls = {
 		}
 	}, 
 	lowestSubble(SUBBLES) {
-		let oldest = SUBBLES[0];
+		let oldest;
 		for(const obj1 of SUBBLES) {
-			if (obj1.generation < oldest.generation) {
+			if (!oldest || obj1.generation < oldest.generation) {
 				oldest = obj1;
 			}
 		}
