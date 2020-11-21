@@ -1,4 +1,5 @@
 "use strict";
+p5.disableFriendlyErrors = true; // disables Friendly Error System
 
 //Consequences of adopting child already having parent
 //Drawing lines to non-rendered family
