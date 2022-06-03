@@ -182,9 +182,7 @@ function cursorDragged() {
 			DrawZ.mouseForCamera = true;
 		}
 	} else {
-		if (mouseButton === RIGHT) {
-			DrawZ.mouseForCamera = true;
-		}
+		DrawZ.mouseForCamera = true;
 	}
 }
 function cursorPressed() {
