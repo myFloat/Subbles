@@ -674,7 +674,7 @@ var Sbls = {
 
 function draw() {
 	DrawZ.everyTick();
-	
+
 	background(0);
 	Sbls.draw();
 	let size = height *0.03;
