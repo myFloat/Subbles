@@ -28,13 +28,24 @@ var Saving = {
         }
         return separators;
     },
+    getAncestors() {
+        const ancestors = new Set();
+        for (const subble of Sbls.instances) {
+            if (subble.parents.length === 0) {
+                ancestors.add(subble);
+            }
+        }
+        return ancestors;
+    },
     load(string) {
         if (string.substr(0, 2) !== "v2") {
             throw "Error: save data is not in the requested format";
         }
+        this.separators = [...string.substr(2, 3)];
+        let cursor = 0;
         
     },
-    loadSubble(subble, parentPos) {
+    loadSubble(string, parentPos) {
         
         const genScalar = pow(1 / Sbls.generationGap, this.loadingGeneration);
         const pos = math.add(math.divide(this.gridPos, genScalar), parentPos);
@@ -45,10 +56,8 @@ var Saving = {
     save() {
         this.separators = this.findSeparators();
         this.saveString = "v2" + this.separators.join("");
-        for (const subble of Sbls.instances) {
-            if (subble.parents.length === 0) {
-                this.saveSubble(subble);
-            }
+        for (const subble of this.getAncestors()) {
+            this.saveSubble(subble);
         }
         return this.saveString;
     },
