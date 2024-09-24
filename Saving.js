@@ -5,6 +5,7 @@ var Saving = {
     loadingGeneration: 0,
     saveString: "",
     separators: [],
+    trash: [],
     findSeparators() {
         let usedCharCodes = new Set();
         for (const subble of Sbls.instances) {
@@ -38,20 +39,97 @@ var Saving = {
         return ancestors;
     },
     load(string) {
+        this.trash = Sbls.instances;
+        Sbls.instances = [];
         if (string.substr(0, 2) !== "v2") {
             throw "Error: save data is not in the requested format";
         }
         this.separators = [...string.substr(2, 3)];
-        let cursor = 0;
-        
+        this.loadingGeneration = 0;
+        /*const phrase = "";
+        let phase = 0;
+        for (let c of string.substr(5)) {
+            if (separators.indexOf(c) >= 0) {
+                if (c === separator[0]) {
+                    if (phase === 0) {
+                        
+                    }
+                }
+            } else {
+                phrase += c;
+            }
+        }*/
+        for (let k = 5; k < string.length; ) {
+            const end = string.indexOf(this.separators[2], k);
+            const subbleString = string.substr(k, end - k);
+            this.loadSubble(subbleString);
+        }
+        this.trash = [];
     },
-    loadSubble(string, parentPos) {
-        
-        const genScalar = pow(1 / Sbls.generationGap, this.loadingGeneration);
-        const pos = math.add(math.divide(this.gridPos, genScalar), parentPos);
-        const radius = 0;
-        const generation = this.loadingGeneration;
+    loadSubble(string, parent = null) {
+        const error = "Error: save data corrupted";
+        let k = 0;
+        let l = string.indexOf(this.separators[0]);
+        const name = string.substr(k, l - k);
+        k = l + 1;
+        l = string.indexOf(this.separators[0], k);
+        let x = string.substr(k, l - k) * 1;
+        k = l + 1;
+        l = string.indexOf(this.separators[0], k)
+        const m = string.indexOf(this.separators[1], k);
+        let additionalParents = true;
+        if (l < 0 || m < l) {
+            l = m;
+            additionalParents = false;
+        }
+        let y = string.substr(k, l - k) * 1;
+        if (x !== x || y !== y) {
+            throw error;
+        }
+        const gridPos = [x, y];
+        k = l + 1;
+        const parentIndexes = [];
+        if (additionalParents) {
+            for ( ; k < m; ) {
+                l = string.indexOf(separators[0], k);
+                let index = string.substr(k, l - k) * 1;
+                if (index !== index) {
+                    throw error;
+                }
+                parentIndexes.push(index);
+                k = l + 1;
+            }
+            k = m + 1;
+        }
         const parents = [];
+        let parentPos = [0, 0];
+        if (parent) {
+            parents.push(parent);
+            parentPos = parent.pos;
+        }
+        for(let index of parentIndexes) {
+            parents.push(Sbls.instances[index]);
+        }
+        const genScalar = pow(1 / Sbls.generationGap, this.loadingGeneration);
+        const pos = math.add(math.divide(gridPos, genScalar), parentPos);
+        const generation = this.loadingGeneration;
+        const radius = 144 * pow(Sbls.generationGap, generation);
+        const subble = Sbls.createSubble(pos[0], pos[1], radius, name, parents, this.loadingGeneration);
+        if (k < string.length) {
+            const newString = string.substr(k);
+            this.loadingGeneration++;
+            while (newString.length > 0) {
+                newString = this.loadSubble(newString, subble);
+            }
+            this.loadingGeneration--;
+        }
+        return string.substr(k);
+    },
+    restoreFromTrash() {
+        let trash = this.trash;
+        Sbls.instances = trash;
+        this.trash = [];
+        return trash;
     },
     save() {
         this.separators = this.findSeparators();
