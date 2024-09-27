@@ -150,8 +150,8 @@ function setup() {
     DrawZ.zoomOnPoint = true;
 
     //Subbles
-    if (localStorage.saved_mindmap !== undefined) {
-        loadFile("saved_mindmap");
+    if (localStorage.saved_mindmap) {
+        Saving.load(localStorage.saved_mindmap);
     } else {
         Sbls.createSubble(0, 0, 144, "Mindmap");
         Sbls.render();

@@ -2,11 +2,34 @@
 //Optimize size by indexing additional parents according to only other additional parents
 
 var Saving = {
+    additionalParents: new Map(),
     error: "Error: save data corrupted",
     loadingGeneration: 0,
+    savedSubbles: new Set(),
     saveString: "",
     separators: [],
     trash: [],
+    convert(string) {
+        Sbls.instances = [];
+        let fromStorage = JSON.parse(string);
+        for (let i = 0; i < fromStorage.length; i++) {
+            const obj1 = fromStorage[i];
+            Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
+        }
+        for (let j = 0; j < fromStorage.length; j++) {
+            const obj1 = Sbls.instances[j];
+            for (let i = 0; i < fromStorage[j].parents.length; i++) {
+                obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
+            }
+            for (let i = 0; i < fromStorage[j].children.length; i++) {
+                obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
+            }
+            obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
+        }
+        Sbls.render();
+        console.log("Save data converted from older format.");
+        return Saving.save();
+    },
     findSeparators() {
         let usedCharCodes = new Set();
         for (const subble of Sbls.instances) {
@@ -41,14 +64,14 @@ var Saving = {
     },
     load(string) {
         this.trash = Sbls.instances;
-        Sbls.instances = [];
         if (string.substr(0, 2) !== "v2") {
-            throw "Error: save data is not in the requested format";
+            if (!(string = this.convert(string))) {
+                throw "Error: save data is not in the requested format";
+            }
         }
+        Sbls.instances = [];
         this.separators = [...string.substr(2, 3)];
-
         string = string.substr(5);
-
         this.loadingGeneration = 0;
         const subbles = [];
         const searcher = RegExp(["[", this.separators[1], this.separators[2], "]"], "g");
@@ -78,11 +101,17 @@ var Saving = {
             throw this.error + " (ref:2)";
         }
         json += "]";
-        this.loadSubbles(JSON.parse(json));
+        const data = JSON.parse(json);
+        this.loadSubbles(data);
+        for (const subble of this.additionalParents.keys()) {
+            for (const index of this.additionalParents.get(subble)) {
+                const parent = Sbls.instances[index];
+                parent.adopt(subble);
+            }
+        }
         Sbls.render();
-        return JSON.parse(json);
-
         this.trash = [];
+        return data;
     },
     loadSubbles(dataTree, parent=null) {
         for (let j = 0; j < dataTree.length; j += 2) {
@@ -95,29 +124,26 @@ var Saving = {
             let x = string.substr(k, l - k) * 1;
             k = l + 1;
             l = string.indexOf(this.separators[0], k)
-            let additionalParents = true;
             if (l < 0 || string.length < l) {
                 l = string.length;
-                additionalParents = false;
             }
             let y = string.substr(k, l - k) * 1;
             if (x !== x || y !== y) {
-                throw this.error +" (ref:3)";
+                throw this.error + " (ref:3)";
             }
             const gridPos = [x, y];
             k = l + 1;
             const parentIndexes = [];
-            if (additionalParents) {
-                for (; k < m; ) {
-                    l = string.indexOf(separators[0], k);
-                    let index = string.substr(k, l - k) * 1;
-                    if (index !== index) {
-                        throw error;
-                    }
-                    parentIndexes.push(index);
-                    k = l + 1;
+            const moreParentData = string.substr(k, string.length - k);
+            for (const data of moreParentData.split(this.separators[0])) {
+                if (data === "") {
+                    break;
                 }
-                k = m + 1;
+                const index = Number(data);
+                if (index !== index) {
+                    throw this.error + " (ref:4)";
+                }
+                parentIndexes.push(index);
             }
             const parents = [];
             let parentPos = [0, 0];
@@ -125,14 +151,12 @@ var Saving = {
                 parents.push(parent);
                 parentPos = parent.pos;
             }
-            for (let index of parentIndexes) {
-                parents.push(Sbls.instances[index]);
-            }
             const genScalar = pow(1 / Sbls.generationGap, this.loadingGeneration);
             const pos = math.add(math.divide(gridPos, genScalar), parentPos);
             const generation = this.loadingGeneration;
             const radius = 144 * pow(Sbls.generationGap, generation);
             const subble = Sbls.createSubble(pos[0], pos[1], radius, name, parents, this.loadingGeneration);
+            this.additionalParents.set(subble, parentIndexes);
             this.loadingGeneration++;
             this.loadSubbles(dataTree[j + 1], subble);
         }
@@ -153,6 +177,11 @@ var Saving = {
         return this.saveString;
     },
     saveSubble(subble) {
+        if (this.savedSubbles.has(subble)) {
+            return false;
+        } else {
+            this.savedSubbles.add(subble);
+        }
         subble.gridAlign([subble]);
         const s = this.separators[0];
         this.saveString += subble.name + s;
@@ -162,35 +191,16 @@ var Saving = {
             this.saveString += subble.gridPos[0] + s + subble.gridPos[1];
         }
         if (subble.parents.length > 1) {
-            for (const parent of subble.parents) {
+            for (const parent of new Set(subble.parents)) {
                 const index = Sbls.instances.indexOf(parent);
                 this.saveString += s + index;
             }
         }
         this.saveString += this.separators[1];
-        for (const child of subble.children) {
+        for (const child of new Set(subble.children)) {
             this.saveSubble(child);
         }
         this.saveString += this.separators[2];
         return this.saveString;
     },
 };
-function temp(NAME) {
-    Sbls.instances = [];
-    let fromStorage = JSON.parse(localStorage.getItem(NAME));
-    for (let i = 0; i < fromStorage.length; i++) {
-        const obj1 = fromStorage[i];
-        Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
-    }
-    for (let j = 0; j < fromStorage.length; j++) {
-        const obj1 = Sbls.instances[j];
-        for (let i = 0; i < fromStorage[j].parents.length; i++) {
-            obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
-        }
-        for (let i = 0; i < fromStorage[j].children.length; i++) {
-            obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
-        }
-        obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
-    }
-    Sbls.render();
-}
