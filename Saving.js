@@ -103,12 +103,7 @@ var Saving = {
         json += "]";
         const data = JSON.parse(json);
         this.loadSubbles(data);
-        for (const subble of this.additionalParents.keys()) {
-            for (const index of this.additionalParents.get(subble)) {
-                const parent = Sbls.instances[index];
-                parent.adopt(subble);
-            }
-        }
+        this.synchronizeRelations();
         Sbls.render();
         this.trash = [];
         return data;
@@ -156,7 +151,9 @@ var Saving = {
             const generation = this.loadingGeneration;
             const radius = 144 * pow(Sbls.generationGap, generation);
             const subble = Sbls.createSubble(pos[0], pos[1], radius, name, parents, this.loadingGeneration);
-            this.additionalParents.set(subble, parentIndexes);
+            if (parentIndexes.length) {
+                this.additionalParents.set(subble, parentIndexes);
+            }
             this.loadingGeneration++;
             this.loadSubbles(dataTree[j + 1], subble);
         }
@@ -170,6 +167,7 @@ var Saving = {
     },
     save() {
         this.separators = this.findSeparators();
+        this.savedSubbles.clear();
         this.saveString = "v2" + this.separators.join("");
         for (const subble of this.getAncestors()) {
             this.saveSubble(subble);
@@ -190,17 +188,29 @@ var Saving = {
         } else {
             this.saveString += subble.gridPos[0] + s + subble.gridPos[1];
         }
-        if (subble.parents.length > 1) {
-            for (const parent of new Set(subble.parents)) {
+        const additionalParents = new Set(subble.parents);
+        additionalParents.delete(subble.parents[0]);
+        if (additionalParents.size) {
+            for (const parent of additionalParents) {
                 const index = Sbls.instances.indexOf(parent);
                 this.saveString += s + index;
             }
         }
         this.saveString += this.separators[1];
         for (const child of new Set(subble.children)) {
-            this.saveSubble(child);
+            if (subble === child.parents[0]) {
+                this.saveSubble(child);
+            }
         }
         this.saveString += this.separators[2];
         return this.saveString;
     },
+    synchronizeRelations() { //Needed for Version 0
+        for (const child of this.additionalParents.keys()) {
+            for (const index of this.additionalParents.get(child)) {
+                const parent = Sbls.instances[index];
+                parent.adopt(child);
+            }
+        }
+    }
 };

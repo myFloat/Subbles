@@ -28,9 +28,14 @@ function prepareSave() {
         obj1.ancestor = Sbls.instances.indexOf(Sbls.instances[j].ancestor);
     }
 }
-function saveFile(NAME) {
-    prepareSave();
-    localStorage.setItem(NAME, JSON.stringify(toStorage));
+function saveFile(name) {
+    const data = Saving.save();
+    if (data.length < 12) {
+        return "WARNING: Save data is very small. Saving error likely. Not saved!";
+    } else {
+        localStorage.setItem(name, data);
+        return "Saved!";
+    }
 }
 function saveText() {
     prepareSave();
@@ -570,8 +575,7 @@ var Sbls = {
                     theta += increment;
                     this.alternatives.push([alt3, [cos(theta) * circleRadius, sin(theta) * circleRadius], optionRadius, draw3]);
                 } else {
-                    saveFile("saved_mindmap");
-                    s = "Saved!"
+                    s = saveFile("saved_mindmap");
 
                     this.menuPos = DrawZ.invertScaled(OBJ[0], OBJ[1]);
                     const increment = PI * 2 / 3;
