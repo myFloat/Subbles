@@ -627,7 +627,7 @@ var Sbls = {
                             }
                         }
                         if (name !== "") {
-                            loadText(name);
+                            Saving.load(name);
                             Sbls.menuShift(forMenu);
                         } else {
                             const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);

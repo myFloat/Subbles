@@ -10,8 +10,11 @@ var Saving = {
     separators: [],
     trash: [],
     convert(string) {
-        Sbls.instances = [];
+        if (string[0] !== "[") {
+            string = string.substr(1, string.length - 2);
+        }
         let fromStorage = JSON.parse(string);
+        Sbls.instances = [];
         for (let i = 0; i < fromStorage.length; i++) {
             const obj1 = fromStorage[i];
             Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
@@ -65,7 +68,9 @@ var Saving = {
     load(string) {
         this.trash = Sbls.instances;
         if (string.substr(0, 2) !== "v2") {
-            if (!(string = this.convert(string))) {
+            if (string.substr(1, 2) === "v2") {
+                string = string.substr(1, string.length - 2);
+            } else if (!(string = this.convert(string))) {
                 throw "Error: save data is not in the requested format";
             }
         }
@@ -74,7 +79,7 @@ var Saving = {
         string = string.substr(5);
         this.loadingGeneration = 0;
         const subbles = [];
-        const searcher = RegExp(["[", this.separators[1], this.separators[2], "]"], "g");
+        const searcher = RegExp(["[" + this.separators[1] + this.separators[2] + "]"], "g");
         let depth = 0;
         let lastDepth = depth;
         let k = 0;
@@ -84,7 +89,9 @@ var Saving = {
                 if (lastDepth === depth + 1) {
                     json += ',';
                 }
-                json += '"' + string.substr(k, match.index - k) + '",[';
+                const subString = string.substr(k, match.index - k);
+                const subbleData = '"' + subString.replaceAll('"', '\\"') + '",[';
+                json += subbleData;
                 lastDepth = depth;
                 depth++;
             } else {
