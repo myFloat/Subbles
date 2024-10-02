@@ -162,7 +162,7 @@ function setup() {
         Sbls.render();
     }
 
-    s = "Version 1";
+    s = "Version 2";
 }
 
 function cursorDragged() {
