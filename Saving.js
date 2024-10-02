@@ -199,7 +199,7 @@ var Saving = {
         additionalParents.delete(subble.parents[0]);
         if (additionalParents.size) {
             for (const parent of additionalParents) {
-                const index = Sbls.instances.indexOf(parent);
+                const index = [...this.savedSubbles].indexOf(parent);
                 this.saveString += s + index;
             }
         }
