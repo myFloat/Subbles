@@ -176,7 +176,6 @@ var Saving = {
     save() {
         this.separators = this.findSeparators();
         this.savedSubbles.clear();
-        //let index = 0; //note: remove?
         const indexedSubbles = new Set();
         let giveIndex = function(subble) {
             indexedSubbles.add(subble);
