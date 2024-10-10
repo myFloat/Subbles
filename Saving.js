@@ -8,6 +8,7 @@ var Saving = {
     savedSubbles: new Set(),
     saveString: "",
     separators: [],
+    subbleIndexes: [],
     trash: [],
     convert(string) {
         if (string[0] !== "[") {
@@ -175,6 +176,18 @@ var Saving = {
     save() {
         this.separators = this.findSeparators();
         this.savedSubbles.clear();
+        //let index = 0; //note: remove?
+        const indexedSubbles = new Set();
+        let giveIndex = function(subble) {
+            indexedSubbles.add(subble);
+            for (const child of subble.children) {
+                giveIndex(child);
+            }
+        }
+        for (const subble of this.getAncestors()) {
+            giveIndex(subble);
+        }
+        this.subbleIndexes = [...indexedSubbles];
         this.saveString = "v2" + this.separators.join("");
         for (const subble of this.getAncestors()) {
             this.saveSubble(subble);
@@ -199,7 +212,7 @@ var Saving = {
         additionalParents.delete(subble.parents[0]);
         if (additionalParents.size) {
             for (const parent of additionalParents) {
-                const index = [...this.savedSubbles].indexOf(parent);
+                const index = [...this.subbleIndexes].indexOf(parent);
                 this.saveString += s + index;
             }
         }
