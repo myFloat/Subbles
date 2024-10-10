@@ -22,7 +22,7 @@ async fn main() {
 async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     // Serve the index.html file
     if req.uri() == "/" {
-        match fs::read_to_string("index.html") {
+        match fs::read_to_string("../index.html") {
             Ok(content) => {
                 Ok(Response::new(Body::from(content)))
             }
