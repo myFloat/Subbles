@@ -4,6 +4,7 @@
 var Saving = {
     additionalParents: new Map(),
     error: "Error: save data corrupted",
+    inputFile: null,
     loadingGeneration: 0,
     savedSubbles: new Set(),
     saveString: "",
@@ -167,6 +168,45 @@ var Saving = {
         }
         this.loadingGeneration--;
     },
+    promptLoadMapFromFile() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.onchange = function(anInput) {
+            const file = anInput.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function() {
+                Saving.load(reader.result);
+            }
+            reader.readAsText(file);
+        }
+        ;
+        input.click();
+    },
+    promptSaveFile(data, filename, type) {
+        const file = new Blob([data],{
+            type: type
+        });
+        if (window.navigator.saveOrOpenBlob) {
+            window.navigator.saveOrOpenBlob(file, filename);
+        } else {
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(file);
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(function() {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link);
+            }, 0);
+        }
+    },
+    promptSaveMapToFile() {
+        const data = Saving.save();
+        const filename = "mindmap.mmp";
+        const type = "text/plain";
+        this.promptSaveFile(data, filename, type);
+    },
     restoreFromTrash() {
         let trash = this.trash;
         Sbls.instances = trash;
@@ -192,6 +232,15 @@ var Saving = {
             this.saveSubble(subble);
         }
         return this.saveString;
+    },
+    saveLocally(name) {
+        const data = Saving.save();
+        if (data.length < 12) {
+            return "WARNING: Save data is very small. Saving error likely. Not saved!";
+        } else {
+            localStorage.setItem(name, data);
+            return "Saved!";
+        }
     },
     saveSubble(subble) {
         if (this.savedSubbles.has(subble)) {
@@ -224,7 +273,8 @@ var Saving = {
         this.saveString += this.separators[2];
         return this.saveString;
     },
-    synchronizeRelations() { //Needed for Version 0
+    synchronizeRelations() {
+        //Needed for Version 0
         for (const child of this.additionalParents.keys()) {
             for (const index of this.additionalParents.get(child)) {
                 const parent = Sbls.instances[index];
