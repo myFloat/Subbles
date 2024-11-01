@@ -6,81 +6,6 @@
 //	Button for touchscreen
 //General do for all children method (maybe)
 
-let toStorage;
-function prepareSave() {
-    let content = [];
-    for (const obj1 of Sbls.instances) {
-        const obj2 = Object.assign({}, obj1)
-        content.push(obj2);
-    }
-    toStorage = content;
-    for (let j = 0; j < Sbls.instances.length; j++) {
-        const obj1 = toStorage[j];
-        const obj2 = Sbls.instances[j];
-        obj1.parents = obj2.parents.splice();
-        obj1.children = obj2.children.splice();
-        for (let i = 0; i < obj2.parents.length; i++) {
-            obj1.parents[i] = Sbls.instances.indexOf(Sbls.instances[j].parents[i]);
-        }
-        for (let i = 0; i < obj2.children.length; i++) {
-            obj1.children[i] = Sbls.instances.indexOf(Sbls.instances[j].children[i]);
-        }
-        obj1.ancestor = Sbls.instances.indexOf(Sbls.instances[j].ancestor);
-    }
-}
-function saveFile(name) {
-    const data = Saving.save();
-    if (data.length < 12) {
-        return "WARNING: Save data is very small. Saving error likely. Not saved!";
-    } else {
-        localStorage.setItem(name, data);
-        return "Saved!";
-    }
-}
-function saveText() {
-    prepareSave();
-    return JSON.stringify(toStorage);
-}
-
-function loadFile(NAME) {
-    Sbls.instances = [];
-    let fromStorage = JSON.parse(localStorage.getItem(NAME));
-    for (let i = 0; i < fromStorage.length; i++) {
-        const obj1 = fromStorage[i];
-        Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
-    }
-    for (let j = 0; j < fromStorage.length; j++) {
-        const obj1 = Sbls.instances[j];
-        for (let i = 0; i < fromStorage[j].parents.length; i++) {
-            obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
-        }
-        for (let i = 0; i < fromStorage[j].children.length; i++) {
-            obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
-        }
-        obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
-    }
-    Sbls.render();
-}
-function loadText(TEXT) {
-    Sbls.instances = [];
-    let fromStorage = JSON.parse(TEXT);
-    for (let i = 0; i < fromStorage.length; i++) {
-        const obj1 = fromStorage[i];
-        Sbls.createSubble(obj1.pos[0], obj1.pos[1], obj1.radius, obj1.name, [], obj1.generation);
-    }
-    for (let j = 0; j < fromStorage.length; j++) {
-        const obj1 = Sbls.instances[j];
-        for (let i = 0; i < fromStorage[j].parents.length; i++) {
-            obj1.parents[i] = Sbls.instances[fromStorage[j].parents[i]];
-        }
-        for (let i = 0; i < fromStorage[j].children.length; i++) {
-            obj1.children[i] = Sbls.instances[fromStorage[j].children[i]];
-        }
-        obj1.ancestor = Sbls.instances[fromStorage[j].ancestor];
-    }
-    Sbls.render();
-}
-
 window.oncontextmenu = function() {
     if (Sbls.input === null) {
         return false;
@@ -137,7 +62,7 @@ function singleTap() {
 }
 //P5
 
-//Mouse colission
+//Mouse collision
 var clickedObject = null;
 //This points at one object that is currently being clicked
 var clickOffset = [];
@@ -575,7 +500,7 @@ var Sbls = {
                     theta += increment;
                     this.alternatives.push([alt3, [cos(theta) * circleRadius, sin(theta) * circleRadius], optionRadius, draw3]);
                 } else {
-                    s = saveFile("saved_mindmap");
+                    s = Saving.saveLocally("saved_mindmap");
 
                     this.menuPos = DrawZ.invertScaled(OBJ[0], OBJ[1]);
                     const increment = PI * 2 / 3;
@@ -600,13 +525,8 @@ var Sbls = {
 
                     //To save
                     const alt2 = function() {
-                        const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
-                        const string = saveText();
-                        const subble = Sbls.createSubble(vec[0], vec[1], optionRadius / DrawZ.zoom, string);
-                        Sbls.render();
+                        Saving.promptSaveMapToFile();
                         Sbls.menuShift(forMenu);
-                        //This has to come before next line
-                        Sbls.editName(subble);
                     }
                     const draw2 = function(POS) {
                         fill(0);
@@ -630,12 +550,9 @@ var Sbls = {
                             Saving.load(name);
                             Sbls.menuShift(forMenu);
                         } else {
-                            const vec = DrawZ.invertScaled(OBJ[0], OBJ[1]);
-                            const subble = Sbls.createSubble(vec[0], vec[1], 144, 'Create bubble named "LOAD" and add subble to it named with load-code');
+                            Saving.promptLoadMapFromFile();
                             Sbls.render();
                             Sbls.menuShift(forMenu);
-                            //This has to come before next line
-                            Sbls.editName(subble);
                         }
                     }
                     const draw3 = function(POS) {
@@ -692,7 +609,6 @@ var Sbls = {
 
 function draw() {
     DrawZ.everyTick();
-
     background(0);
     Sbls.draw();
     let size = height * 0.03;
