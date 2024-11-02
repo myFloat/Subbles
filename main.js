@@ -87,7 +87,7 @@ function setup() {
         Sbls.render();
     }
 
-    s = "Version 4";
+    s = "Version 5";
 }
 
 function cursorDragged() {

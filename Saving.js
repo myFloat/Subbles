@@ -201,7 +201,8 @@ var Saving = {
             }, 0);
         }
     },
-    promptSaveMapToFile() {
+    promptSaveMapToFile(passwordOrKey) {
+        
         const data = Saving.save();
         const filename = "mindmap.mmp";
         const type = "text/plain";
