@@ -2,12 +2,35 @@ use hyper::{Body, Request, Response, Server, StatusCode};
 use hyper::service::{make_service_fn, service_fn};
 use std::{convert::Infallible, fs};
 use std::path::PathBuf;
+use std::net::{IpAddr, SocketAddr};
+use local_ip_address::local_ip;
+use mdns_sd::{ServiceDaemon, ServiceInfo};
+use std::net::Ipv4Addr;
+use std::collections::HashMap;
+use std::time::Duration;
+use tokio::task;
+
 
 
 #[tokio::main]
 async fn main() {
-    // Define the address for the server
-    let addr = ([192, 168, 68, 104], 8080).into();
+    let port = 8080;
+
+    // Get the local IP address
+    let local_ip: Ipv4Addr = match local_ip() {
+        Ok(IpAddr::V4(ipv4)) => ipv4,       // Only use IPv4 addresses
+        Ok(IpAddr::V6(_)) => {
+            eprintln!("Expected an IPv4 address, but got an IPv6 address.");
+            return;
+        }
+        Err(e) => {
+            eprintln!("Error getting local IP: {}", e);
+            return;
+        }
+    };
+    let addr = SocketAddr::new(IpAddr::V4(local_ip), port);
+
+
     let make_svc = make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(handle_request)) });
 
     // Create the server
