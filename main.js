@@ -447,13 +447,11 @@ var Sbls = {
             if (this.menu === null) {
                 forMenu = OBJ;
                 this.alternatives = [];
-                const optionRadius = height / 24;
-                const circleRadius = height / 6;
-                let theta = PI / 2;
+                const sup = this;
+                const optionRadius = height / 20;
+                const circleRadius = height / 5;
                 if (OBJ.length === undefined) {
                     this.menuPos = OBJ.pos;
-                    const increment = PI * 2 / 3;
-                    //Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 
                     //To add subble to bubble
                     const alt1 = function() {
@@ -469,8 +467,7 @@ var Sbls = {
                         textSize(optionRadius * 2);
                         text("+", POS[0], POS[1] + optionRadius * 0.6);
                     }
-                    theta += increment;
-                    this.alternatives.push([alt1, [cos(theta) * circleRadius, sin(theta) * circleRadius], optionRadius, draw1]);
+                    this.alternatives.push([alt1, [], optionRadius, draw1]);
 
                     //To edit name
                     const alt2 = function() {
@@ -483,8 +480,7 @@ var Sbls = {
                         fill(0);
                         text('"' + forMenu.name + '"', POS[0], POS[1] + optionRadius * 0.1);
                     }
-                    theta += increment;
-                    this.alternatives.push([alt2, [cos(theta) * circleRadius, sin(theta) * circleRadius], optionRadius, draw2]);
+                    this.alternatives.push([alt2, [], optionRadius, draw2]);
 
                     //To remove bubble
                     const alt3 = function() {
@@ -497,14 +493,13 @@ var Sbls = {
                         textSize(optionRadius * 2);
                         text("🗑", POS[0], POS[1] + optionRadius * 0.6);
                     }
-                    theta += increment;
-                    this.alternatives.push([alt3, [cos(theta) * circleRadius, sin(theta) * circleRadius], optionRadius, draw3]);
+                    this.alternatives.push([alt3, [], optionRadius, draw3]);
+
                 } else {
                     s = Saving.saveLocally("saved_mindmap");
 
                     this.menuPos = DrawZ.invertScaled(OBJ[0], OBJ[1]);
                     const increment = PI * 2 / 3;
-                    //Change this when adding alt-functions (or beautify this block of code so that you don't have to)
 
                     //To add parentless bubble
                     const alt1 = function() {
@@ -520,8 +515,7 @@ var Sbls = {
                         textSize(optionRadius * 2);
                         text("+", POS[0], POS[1] + optionRadius * 0.6);
                     }
-                    theta += increment;
-                    this.alternatives.push([alt1, [cos(theta) * circleRadius, sin(theta) * circleRadius], optionRadius, draw1]);
+                    this.alternatives.push([alt1, [], optionRadius, draw1]);
 
                     //To save
                     const alt2 = function() {
@@ -533,8 +527,7 @@ var Sbls = {
                         textSize(optionRadius * 2);
                         text("💾", POS[0], POS[1] + optionRadius * 0.6);
                     }
-                    theta += increment;
-                    this.alternatives.push([alt2, [cos(theta) * circleRadius, sin(theta) * circleRadius], optionRadius, draw2]);
+                    this.alternatives.push([alt2, [], optionRadius, draw2]);
 
                     //To load
                     const alt3 = function() {
@@ -560,8 +553,34 @@ var Sbls = {
                         textSize(optionRadius * 2);
                         text("📁", POS[0], POS[1] + optionRadius * 0.6);
                     }
-                    theta += increment;
-                    this.alternatives.push([alt3, [cos(theta) * circleRadius, sin(theta) * circleRadius], optionRadius, draw3]);
+                    this.alternatives.push([alt3, [], optionRadius, draw3]);
+
+                    //To set encryption key
+                    const alt4 = function() {
+                        if (Saving.saveKey.isUsed) {
+                            Saving.stopUsingKey();
+                        } else {
+                            Saving.saveKey.pos = sup.menuPos;
+                            Sbls.menuShift(forMenu);
+                            //This has to come before next line
+                            Saving.saveKey.name = "Enter password...";
+                            Sbls.editName(Saving.saveKey);
+                        }
+                    }
+                    const draw4 = function(POS) {
+                        fill(0);
+                        textSize(optionRadius * 2);
+                        let symbol = "🔓";
+                        if (Saving.saveKey.isUsed) {
+                            symbol = "🔐";
+                        }
+                        text(symbol, POS[0], POS[1] + optionRadius * 0.6);
+                    }
+                    this.alternatives.push([alt4, [], optionRadius, draw4]);
+                }
+                for (let k = 0; k < this.alternatives.length; k++) {
+                    const theta = (2 * (k + 1) / this.alternatives.length + 0.5) * PI;
+                    this.alternatives[k][1] = [cos(theta) * circleRadius, sin(theta) * circleRadius];
                 }
                 this.mouseForSelection = false;
             } else {
@@ -598,6 +617,10 @@ var Sbls = {
     },
     quitEdit() {
         if (this.input !== null) {
+            if (Saving.saveKey.name !== "") {
+                Saving.saveKey.isUsed = true;
+                Saving.generateSaveKey();
+            }
             this.input.remove();
             this.input = null;
             Sbls.mouseForSelection = true;

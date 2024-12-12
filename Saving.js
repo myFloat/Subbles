@@ -7,6 +7,7 @@ var Saving = {
     inputFile: null,
     loadingGeneration: 0,
     savedSubbles: new Set(),
+    saveKey: {isUsed: false, name: "", number: math.bignumber(0), pos: []},
     saveString: "",
     separators: [],
     subbleIndexes: [],
@@ -14,6 +15,9 @@ var Saving = {
     convert(string) {
         if (string[0] !== "[") {
             string = string.substr(1, string.length - 2);
+            if (string[0] !== "[") {
+                return false;
+            }
         }
         let fromStorage = JSON.parse(string);
         Sbls.instances = [];
@@ -58,6 +62,17 @@ var Saving = {
         }
         return separators;
     },
+    async generateSaveKey() {
+        const signature = String.fromCharCode(74, 9, 126, 103, 73, 22);
+        const digest = await Crch.digest(this.saveKey.name + signature, false);
+        this.saveKey.name = "";
+        let number = math.bignumber(0);
+        for (let k = 0; k < digest.length; k++) {
+            const powerOf256 = math.bignumber(256**(-k -1));
+            number = math.add(number, math.multiply(digest[k] + 128, powerOf256));
+        }
+        this.saveKey.number = number;
+    },
     getAncestors() {
         const ancestors = new Set();
         for (const subble of Sbls.instances) {
@@ -72,7 +87,11 @@ var Saving = {
         if (string.substr(0, 2) !== "v2") {
             if (string.substr(1, 2) === "v2") {
                 string = string.substr(1, string.length - 2);
-            } else if (!(string = this.convert(string))) {
+            } else {
+                if (Saving.saveKey.isUsed) {
+                    
+                }
+                if (!(string = this.convert(string)))
                 throw "Error: save data is not in the requested format";
             }
         }
@@ -201,10 +220,13 @@ var Saving = {
             }, 0);
         }
     },
-    promptSaveMapToFile(passwordOrKey) {
-        
-        const data = Saving.save();
-        const filename = "mindmap.mmp";
+    promptSaveMapToFile() {
+        let data = Saving.save();
+        let filename = "mindmap.mmp";
+        if (Saving.saveKey.isUsed) {
+            data = Crch.encrypt(data, Saving.saveKey.number, Crch.ALG_LINMIX);
+            filename = "mindmap.emp";
+        }
         const type = "text/plain";
         this.promptSaveFile(data, filename, type);
     },
@@ -273,6 +295,13 @@ var Saving = {
         }
         this.saveString += this.separators[2];
         return this.saveString;
+    },
+    stopUsingKey() {
+        Saving.saveKey.isUsed = false;
+        if (math.isBigNumber(Saving.saveKey.number)) {
+            Saving.saveKey.number.d = [0];
+        }
+        Saving.saveKey.number = math.bignumber(0);
     },
     synchronizeRelations() {
         //Needed for Version 0
